@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Beautiful bees, honeycomb, and honey background with golden gradient overlay */
+  /* Using local image from public folder */
+  background-image: 
+    linear-gradient(
+      135deg,
+      rgba(255, 248, 220, 0.70) 0%,
+      rgba(255, 235, 185, 0.65) 50%,
+      rgba(255, 228, 181, 0.70) 100%
+    ),
+    url('/bee-background.jpeg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+  /* Fallback: Honey-colored gradient in case image doesn't load */
+  background-color: #fff8dc;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Ensure content areas have proper background for readability */
+.bg-content {
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
