@@ -1,0 +1,36 @@
+package com.beehivemonitor.controller;
+
+import com.beehivemonitor.dto.AuthResponse;
+import com.beehivemonitor.security.JwtTokenProvider;
+import com.beehivemonitor.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/users")
+@CrossOrigin(origins = "http://localhost:5173")
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private JwtTokenProvider tokenProvider;
+
+    @GetMapping("/me")
+    public ResponseEntity<AuthResponse.UserResponse> getCurrentUser(@RequestHeader("Authorization") String token) {
+        String email = tokenProvider.getEmailFromToken(token.substring(7));
+        return ResponseEntity.ok(userService.getCurrentUser(email));
+    }
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<AuthResponse.UserResponse>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
+    }
+}
+
