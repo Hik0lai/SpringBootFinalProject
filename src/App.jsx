@@ -15,7 +15,15 @@ import Navbar from './components/Navbar';
 
 function PrivateRoute({ children, adminOnly }) {
   const { user, loading } = useAuth();
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="text-xl text-yellow-700">Loading...</div>
+        </div>
+      </div>
+    );
+  }
   if (!user) return <Navigate to="/login" />;
   if (adminOnly && user.role !== 'ADMIN') return <Navigate to="/" />;
   return children;
@@ -25,7 +33,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen">
+        <div className="min-h-screen" style={{ background: 'transparent' }}>
           <Navbar />
           <div className="container mx-auto p-4">
             <Routes>

@@ -15,6 +15,14 @@ export function AuthProvider({ children }) {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((res) => setUser(res.data))
+        .catch((err) => {
+          console.error("Error fetching user:", err);
+          // If token is invalid, clear it
+          if (err.response?.status === 401 || err.response?.status === 403) {
+            localStorage.removeItem("token");
+            setUser(null);
+          }
+        })
         .finally(() => setLoading(false));
     } else {
       setLoading(false);

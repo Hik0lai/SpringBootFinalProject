@@ -8,32 +8,75 @@ export default function HiveForm() {
   const isEdit = !!hiveId;
   const [form, setForm] = useState({ name: "", location: "", queen: "" });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (isEdit) {
       setLoading(true);
       axios.get(`http://localhost:8080/api/hives/${hiveId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      }).then(res => setForm(res.data)).finally(() => setLoading(false));
+      })
+      .then(res => setForm(res.data))
+      .catch(err => {
+        setError(err.response?.data?.message || "Failed to load hive");
+      })
+      .finally(() => setLoading(false));
     }
   }, [hiveId, isEdit]);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
+    setError(""); // Clear error when user types
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
+    setError("");
+    
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError("You must be logged in to create a hive. Please log in again.");
+      setLoading(false);
+      return;
+    }
+    
     const url = isEdit
       ? `http://localhost:8080/api/hives/${hiveId}`
       : `http://localhost:8080/api/hives`;
     const method = isEdit ? "put" : "post";
-    await axios[method](url, form, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    });
-    setLoading(false);
-    navigate("/");
+    
+    try {
+      await axios[method](url, form, {
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 10000 // 10 second timeout
+      });
+      navigate("/");
+    } catch (err) {
+      let errorMessage = "Failed to save hive. Please try again.";
+      
+      if (err.response?.data) {
+        const data = err.response.data;
+        if (data.message) {
+          errorMessage = data.message;
+        } else if (data.error) {
+          errorMessage = data.error;
+        } else if (data.errors) {
+          // Handle validation errors
+          if (typeof data.errors === 'object') {
+            const errorMessages = Object.values(data.errors).join(", ");
+            errorMessage = errorMessages || errorMessage;
+          } else if (Array.isArray(data.errors)) {
+            errorMessage = data.errors.map(e => e.defaultMessage || e.message || e).join(", ");
+          }
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
+      setLoading(false);
+    }
   }
 
   return (
@@ -41,6 +84,11 @@ export default function HiveForm() {
       <h1 className="text-xl font-bold mb-6 text-yellow-700">
         {isEdit ? "Edit Hive" : "Add Hive"}
       </h1>
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+          {error}
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="space-y-5">
         <input
           className="w-full border px-3 py-2 rounded"

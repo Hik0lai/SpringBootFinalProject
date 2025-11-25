@@ -6,22 +6,110 @@ import { useAuth } from "../contexts/AuthContext";
 export default function Dashboard() {
   const [hives, setHives] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const { user } = useAuth();
 
-  useEffect(() => {
+  const fetchHives = () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("Not authenticated. Please log in again.");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
     axios
       .get("http://localhost:8080/api/hives", {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       })
-      .then((res) => setHives(res.data))
+      .then((res) => {
+        // Ensure hives is always an array
+        const hivesData = res.data;
+        if (Array.isArray(hivesData)) {
+          // Clean up any circular references that might have been serialized
+          const cleanedHives = hivesData.map(hive => ({
+            id: hive.id,
+            name: hive.name,
+            location: hive.location,
+            queen: hive.queen,
+            sensors: hive.sensors ? (Array.isArray(hive.sensors) ? hive.sensors.length : 0) : 0
+          }));
+          setHives(cleanedHives);
+        } else {
+          console.warn("API returned non-array data:", hivesData);
+          setHives([]);
+        }
+        setError("");
+      })
+      .catch((err) => {
+        console.error("Error fetching hives:", err);
+        let errorMessage = "Failed to load hives. Please try again.";
+        
+        if (err.code === "ERR_NETWORK" || err.message === "Network Error") {
+          errorMessage = "Cannot connect to server. Please make sure Spring Boot is running on http://localhost:8080";
+        } else if (err.response?.status === 401 || err.response?.status === 403) {
+          errorMessage = "Authentication failed. Please log in again.";
+          localStorage.removeItem("token");
+        } else if (err.response?.data?.error) {
+          errorMessage = err.response.data.error;
+        } else if (err.response?.data?.message) {
+          errorMessage = err.response.data.message;
+        }
+        
+        setError(errorMessage);
+        setHives([]); // Always ensure it's an array
+      })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchHives();
   }, []);
+
+  const handleDeleteHive = async (hiveId, hiveName) => {
+    // Show confirmation prompt
+    const confirmed = window.confirm(
+      `Are you sure you want to delete the hive "${hiveName}"?\n\nThis action cannot be undone.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("Not authenticated. Please log in again.");
+      return;
+    }
+
+    try {
+      await axios.delete(`http://localhost:8080/api/hives/${hiveId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      // Refresh the hive list
+      fetchHives();
+    } catch (err) {
+      console.error("Error deleting hive:", err);
+      const errorMessage = err.response?.data?.error 
+        || err.response?.data?.message 
+        || "Failed to delete hive. Please try again.";
+      alert(`Error: ${errorMessage}`);
+    }
+  };
 
   return (
     <div className="bg-content rounded-lg p-6 shadow-lg">
       <h1 className="text-2xl font-bold mb-4 text-yellow-700">Your Hives</h1>
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+          {error}
+        </div>
+      )}
       <div className="mb-4">
         <Link
           to="/add-hive"
@@ -30,29 +118,105 @@ export default function Dashboard() {
         </Link>
       </div>
       {loading ? (
-        <div>Loading...</div>
-      ) : hives.length === 0 ? (
-        <div>No hives found.</div>
-      ) : (
+        <div className="text-center py-8">
+          <div className="text-lg text-yellow-700">Loading hives...</div>
+        </div>
+      ) : error && !Array.isArray(hives) ? (
+        <div className="text-center py-8">
+          <div className="text-gray-600">{error}</div>
+        </div>
+      ) : Array.isArray(hives) && hives.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {hives.map((hive) => (
-            <Link
-              to={`/hives/${hive.id}`}
+            <div
               key={hive.id}
-              className="bg-white p-4 rounded-lg shadow hover:shadow-xl border border-yellow-100 transition-shadow relative"
+              className="group relative bg-white rounded-lg shadow-lg hover:shadow-2xl border border-yellow-200 transition-all duration-300 overflow-hidden"
             >
-              <div className="text-lg font-semibold text-yellow-700">
-                {hive.name}
+              {/* Delete Button */}
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleDeleteHive(hive.id, hive.name);
+                }}
+                className="absolute top-2 right-2 z-10 bg-orange-500 hover:bg-orange-600 text-white p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+                title="Delete hive"
+              >
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className="h-4 w-4" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
+                  />
+                </svg>
+              </button>
+
+              {/* Beehive Image - Clickable Link */}
+              <Link to={`/hives/${hive.id}`} className="block">
+                <div className="relative h-48 w-full overflow-hidden bg-gradient-to-br from-yellow-100 to-yellow-200">
+                  <img
+                    src="/hive/hive.jpg"
+                    alt={`Beehive ${hive.name}`}
+                    className="w-full h-full object-contain object-center group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      // Fallback if image doesn't exist
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                  {/* Fallback gradient if image doesn't exist */}
+                  <div className="hidden w-full h-full bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 items-center justify-center">
+                    <div className="text-6xl">🏠</div>
+                  </div>
+                  
+                  {/* Overlay with information */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent">
+                    <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                      <h3 className="text-xl font-bold mb-1 drop-shadow-lg">{hive.name}</h3>
+                      <p className="text-sm text-yellow-200 drop-shadow">{hive.location}</p>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+              
+              {/* Information Section */}
+              <div className="p-4 bg-white">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-yellow-700 bg-yellow-100 px-2 py-1 rounded">
+                      ID: {hive.id}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-3 text-sm text-gray-600">
+                  <div className="flex items-center gap-1">
+                    <span className="font-semibold text-yellow-700">👑</span>
+                    <span>{hive.queen ? hive.queen : "Unknown"}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="font-semibold text-yellow-700">📡</span>
+                    <span>{typeof hive.sensors === 'number' ? hive.sensors : (Array.isArray(hive.sensors) ? hive.sensors.length : 0)} Sensors</span>
+                  </div>
+                </div>
               </div>
-              <div className="text-gray-600 mb-2">{hive.location}</div>
-              <div className="text-xs text-gray-400">ID: {hive.id}</div>
-              <div className="flex gap-3 mt-2 text-sm">
-                <span>Queen: {hive.queen ? hive.queen : "?"}</span>
-                <span>|</span>
-                <span>Sensors: {hive.sensors ? hive.sensors.length : 0}</span>
-              </div>
-            </Link>
+            </div>
           ))}
+        </div>
+      ) : (
+        <div className="text-center py-8">
+          <div className="text-gray-600 mb-4">No hives found.</div>
+          <Link
+            to="/add-hive"
+            className="inline-block bg-yellow-500 px-6 py-2 rounded text-white hover:bg-yellow-600">
+            Create Your First Hive
+          </Link>
         </div>
       )}
     </div>

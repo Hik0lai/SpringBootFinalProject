@@ -49,5 +49,12 @@ public class HiveController {
         String email = getEmailFromToken(token);
         return ResponseEntity.ok(hiveService.updateHive(id, hive, email));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteHive(@PathVariable Long id, @RequestHeader("Authorization") String token) {
+        String email = getEmailFromToken(token);
+        hiveService.deleteHive(id, email);
+        return ResponseEntity.noContent().build();
+    }
 }
 

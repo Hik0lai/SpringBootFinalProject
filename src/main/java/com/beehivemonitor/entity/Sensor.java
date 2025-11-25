@@ -1,5 +1,6 @@
 package com.beehivemonitor.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -26,6 +27,7 @@ public class Sensor {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hive_id", nullable = false)
+    @JsonIgnoreProperties({"sensors", "user", "inspections", "alerts"})
     private Hive hive;
     
     @OneToMany(mappedBy = "sensor", cascade = CascadeType.ALL, orphanRemoval = true)

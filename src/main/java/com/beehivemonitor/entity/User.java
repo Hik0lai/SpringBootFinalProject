@@ -1,5 +1,6 @@
 package com.beehivemonitor.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -32,6 +33,7 @@ public class User {
     
     @NotBlank
     @Column(nullable = false)
+    @JsonIgnore
     private String password;
     
     @Column(nullable = false)
@@ -39,6 +41,7 @@ public class User {
     private Role role = Role.USER;
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Hive> hives = new ArrayList<>();
     
     public enum Role {

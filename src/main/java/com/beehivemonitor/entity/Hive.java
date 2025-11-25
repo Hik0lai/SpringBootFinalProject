@@ -1,5 +1,7 @@
 package com.beehivemonitor.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -31,15 +33,19 @@ public class Hive {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnoreProperties({"hives", "password"})
     private User user;
     
     @OneToMany(mappedBy = "hive", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties({"hive"})
     private List<Sensor> sensors = new ArrayList<>();
     
     @OneToMany(mappedBy = "hive", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties({"hive"})
     private List<Inspection> inspections = new ArrayList<>();
     
     @OneToMany(mappedBy = "hive", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties({"hive"})
     private List<Alert> alerts = new ArrayList<>();
 }
 
