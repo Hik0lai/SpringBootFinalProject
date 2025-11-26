@@ -64,5 +64,11 @@ public class InspectionService {
         inspection.setNotes(updatedInspection.getNotes());
         return inspectionRepository.save(inspection);
     }
+
+    @Transactional
+    public void deleteInspection(Long id, String email) {
+        Inspection inspection = getInspectionById(id, email); // This also verifies ownership
+        inspectionRepository.delete(inspection);
+    }
 }
 

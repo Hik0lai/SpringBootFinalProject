@@ -112,6 +112,14 @@ public class InspectionController {
         ));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteInspection(@PathVariable Long id,
+                                                  @RequestHeader("Authorization") String token) {
+        String email = getEmailFromToken(token);
+        inspectionService.deleteInspection(id, email);
+        return ResponseEntity.noContent().build();
+    }
+
     // DTOs for request/response
     @Data
     public static class InspectionRequest {
