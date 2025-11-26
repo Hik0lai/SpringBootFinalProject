@@ -71,6 +71,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(new AntPathRequestMatcher("/")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/api/auth/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/api/users/names")).authenticated()
+                .requestMatchers(new AntPathRequestMatcher("/api/users/me")).authenticated()
                 .requestMatchers(new AntPathRequestMatcher("/api/users")).hasRole("ADMIN")
                 .anyRequest().authenticated()
             )

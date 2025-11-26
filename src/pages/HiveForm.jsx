@@ -6,7 +6,7 @@ export default function HiveForm() {
   const { hiveId } = useParams();
   const navigate = useNavigate();
   const isEdit = !!hiveId;
-  const [form, setForm] = useState({ name: "", location: "", queen: "" });
+  const [form, setForm] = useState({ name: "", location: "", birthMonth: "", birthYear: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -16,7 +16,25 @@ export default function HiveForm() {
       axios.get(`http://localhost:8080/api/hives/${hiveId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       })
-      .then(res => setForm(res.data))
+      .then(res => {
+        const data = res.data;
+        if (data.birthDate) {
+          const [year, month] = data.birthDate.split('-');
+          setForm({ 
+            name: data.name || "", 
+            location: data.location || "", 
+            birthMonth: month || "", 
+            birthYear: year || "" 
+          });
+        } else {
+          setForm({ 
+            name: data.name || "", 
+            location: data.location || "", 
+            birthMonth: "", 
+            birthYear: "" 
+          });
+        }
+      })
       .catch(err => {
         setError(err.response?.data?.message || "Failed to load hive");
       })
@@ -46,8 +64,15 @@ export default function HiveForm() {
       : `http://localhost:8080/api/hives`;
     const method = isEdit ? "put" : "post";
     
+    // Combine month and year into birthDate format (YYYY-MM)
+    const submitData = {
+      name: form.name,
+      location: form.location,
+      birthDate: form.birthMonth && form.birthYear ? `${form.birthYear}-${form.birthMonth}` : null
+    };
+    
     try {
-      await axios[method](url, form, {
+      await axios[method](url, submitData, {
         headers: { Authorization: `Bearer ${token}` },
         timeout: 10000 // 10 second timeout
       });
@@ -104,13 +129,38 @@ export default function HiveForm() {
           value={form.location}
           onChange={handleChange}
           required />
-        <input
-          className="w-full border px-3 py-2 rounded"
-          placeholder="Queen Name"
-          name="queen"
-          value={form.queen || ""}
-          onChange={handleChange}
-        />
+        <div className="flex gap-3">
+          <select
+            className="flex-1 border px-3 py-2 rounded"
+            name="birthMonth"
+            value={form.birthMonth}
+            onChange={handleChange}
+          >
+            <option value="">Select Month</option>
+            <option value="01">January</option>
+            <option value="02">February</option>
+            <option value="03">March</option>
+            <option value="04">April</option>
+            <option value="05">May</option>
+            <option value="06">June</option>
+            <option value="07">July</option>
+            <option value="08">August</option>
+            <option value="09">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+          <input
+            className="flex-1 border px-3 py-2 rounded"
+            type="number"
+            placeholder="Year (e.g., 2024)"
+            name="birthYear"
+            min="1900"
+            max="2100"
+            value={form.birthYear}
+            onChange={handleChange}
+          />
+        </div>
         <button
           className="w-full bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600"
           type="submit"

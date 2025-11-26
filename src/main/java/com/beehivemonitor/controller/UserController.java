@@ -32,5 +32,22 @@ public class UserController {
     public ResponseEntity<List<AuthResponse.UserResponse>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
+
+    @GetMapping("/names")
+    public ResponseEntity<List<UserNameResponse>> getAllUserNames(@RequestHeader("Authorization") String token) {
+        return ResponseEntity.ok(userService.getAllUserNames());
+    }
+
+    public static class UserNameResponse {
+        public Long id;
+        public String name;
+        public String email;
+
+        public UserNameResponse(Long id, String name, String email) {
+            this.id = id;
+            this.name = name;
+            this.email = email;
+        }
+    }
 }
 

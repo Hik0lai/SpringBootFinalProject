@@ -16,8 +16,32 @@ export default function Register() {
     try {
       await register({ email, name, password });
       navigate("/");
-    } catch {
-      setError("Could not register. Try a different email.");
+    } catch (err) {
+      let errorMessage = "Could not register. Please try again.";
+      
+      // Check for network errors
+      if (err.code === "ERR_NETWORK" || err.message === "Network Error" || !err.response) {
+        errorMessage = "Cannot connect to server. Please make sure Spring Boot is running on http://localhost:8080";
+      } else if (err.response?.data) {
+        const data = err.response.data;
+        if (data.error) {
+          errorMessage = data.error;
+        } else if (data.message) {
+          errorMessage = data.message;
+        } else if (data.errors) {
+          // Handle validation errors
+          if (typeof data.errors === 'object') {
+            const errorMessages = Object.values(data.errors).join(", ");
+            errorMessage = errorMessages || errorMessage;
+          } else if (Array.isArray(data.errors)) {
+            errorMessage = data.errors.map(e => e.defaultMessage || e.message || e).join(", ");
+          }
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
     }
   }
 

@@ -32,7 +32,6 @@ export default function HiveDetails() {
         <Link to={`/edit-hive/${hive.id}`} className="mr-2 text-blue-600 hover:underline">Edit Hive</Link>
       </div>
       <div className="mb-4 text-gray-700">{hive.location}</div>
-      <div className="mb-2">Queen: <span className="font-semibold">{hive.queen || "Unknown"}</span></div>
       <div className="mb-8">
         <h2 className="font-semibold mb-2">Sensors</h2>
         {sensors.length === 0 

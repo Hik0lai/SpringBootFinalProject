@@ -31,6 +31,9 @@ public class Hive {
     
     private String queen;
     
+    @Column(name = "birth_date")
+    private String birthDate; // Format: YYYY-MM (year-month)
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnoreProperties({"hives", "password"})

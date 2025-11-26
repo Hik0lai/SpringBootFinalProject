@@ -5,6 +5,7 @@ import axios from "axios";
 export default function InspectionForm() {
   const { inspectionId } = useParams();
   const [hives, setHives] = useState([]);
+  const [users, setUsers] = useState([]);
   const [form, setForm] = useState({
     hiveId: "",
     inspector: "",
@@ -16,19 +17,39 @@ export default function InspectionForm() {
   const isEdit = !!inspectionId;
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    
+    // Fetch hives
     axios
       .get("http://localhost:8080/api/hives", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        headers: { Authorization: `Bearer ${token}` },
       })
-      .then((res) => setHives(res.data));
+      .then((res) => setHives(res.data))
+      .catch(err => console.error("Error fetching hives:", err));
+
+    // Fetch users for inspector dropdown
+    axios
+      .get("http://localhost:8080/api/users/names", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => setUsers(res.data))
+      .catch(err => console.error("Error fetching users:", err));
 
     if (isEdit) {
       setLoading(true);
       axios
         .get(`http://localhost:8080/api/inspections/${inspectionId}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: { Authorization: `Bearer ${token}` },
         })
-        .then((res) => setForm(res.data))
+        .then((res) => {
+          setForm({
+            hiveId: res.data.hiveId,
+            inspector: res.data.inspector,
+            date: res.data.date,
+            notes: res.data.notes || "",
+          });
+        })
+        .catch(err => console.error("Error fetching inspection:", err))
         .finally(() => setLoading(false));
     }
   }, [inspectionId, isEdit]);
@@ -72,14 +93,20 @@ export default function InspectionForm() {
             </option>
           ))}
         </select>
-        <input
-          className="w-full border px-3 py-2 rounded"
+        <select
           name="inspector"
-          placeholder="Inspector"
+          className="w-full border px-3 py-2 rounded"
           value={form.inspector}
           onChange={handleChange}
           required
-        />
+        >
+          <option value="">Select Inspector</option>
+          {users.map((user) => (
+            <option key={user.id} value={user.name}>
+              {user.name} ({user.email})
+            </option>
+          ))}
+        </select>
         <input
           className="w-full border px-3 py-2 rounded"
           type="date"

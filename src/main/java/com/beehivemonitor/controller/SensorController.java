@@ -30,5 +30,26 @@ public class SensorController {
         String email = getEmailFromToken(token);
         return ResponseEntity.ok(sensorService.getLatestReadingsByHiveId(hiveId, email));
     }
+
+    @GetMapping("/realtime-data")
+    public ResponseEntity<java.util.Map<Long, HiveSensorData>> getRealtimeDataForAllHives(
+            @RequestHeader("Authorization") String token) {
+        String email = getEmailFromToken(token);
+        return ResponseEntity.ok(sensorService.getRealtimeDataForAllHives(email));
+    }
+
+    public static class HiveSensorData {
+        public double temperature;
+        public double humidity;
+        public double co2;
+        public double soundLevel;
+
+        public HiveSensorData(double temperature, double humidity, double co2, double soundLevel) {
+            this.temperature = temperature;
+            this.humidity = humidity;
+            this.co2 = co2;
+            this.soundLevel = soundLevel;
+        }
+    }
 }
 

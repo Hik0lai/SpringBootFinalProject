@@ -9,6 +9,9 @@ import HiveForm from './pages/HiveForm';
 import InspectionList from './pages/InspectionList';
 import InspectionForm from './pages/InspectionForm';
 import AlertsPage from './pages/AlertsPage';
+import AlertForm from './pages/AlertForm';
+import Graphics from './pages/Graphics';
+import Weather from './pages/Weather';
 import ProfilePage from './pages/ProfilePage';
 import AdminPanel from './pages/AdminPanel';
 import Navbar from './components/Navbar';
@@ -72,6 +75,22 @@ function App() {
                 }
               />
               <Route
+                path="/graphics"
+                element={
+                  <PrivateRoute>
+                    <Graphics />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/weather"
+                element={
+                  <PrivateRoute>
+                    <Weather />
+                  </PrivateRoute>
+                }
+              />
+              <Route
                 path="/inspections"
                 element={
                   <PrivateRoute>
@@ -100,6 +119,22 @@ function App() {
                 element={
                   <PrivateRoute>
                     <AlertsPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/add-alert"
+                element={
+                  <PrivateRoute>
+                    <AlertForm />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/edit-alert/:alertId"
+                element={
+                  <PrivateRoute>
+                    <AlertForm />
                   </PrivateRoute>
                 }
               />

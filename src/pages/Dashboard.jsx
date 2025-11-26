@@ -5,6 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 
 export default function Dashboard() {
   const [hives, setHives] = useState([]);
+  const [sensorData, setSensorData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const { user } = useAuth();
@@ -42,6 +43,8 @@ export default function Dashboard() {
           setHives([]);
         }
         setError("");
+        // Fetch sensor data after hives are loaded
+        fetchSensorData();
       })
       .catch((err) => {
         console.error("Error fetching hives:", err);
@@ -64,8 +67,32 @@ export default function Dashboard() {
       .finally(() => setLoading(false));
   };
 
+  const fetchSensorData = () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    axios
+      .get("http://localhost:8080/api/sensors/realtime-data", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        setSensorData(res.data || {});
+      })
+      .catch((err) => {
+        console.error("Error fetching sensor data:", err);
+      });
+  };
+
   useEffect(() => {
     fetchHives();
+    fetchSensorData(); // Initial fetch
+    
+    // Set up auto-refresh every 1 minute (60000 ms)
+    const interval = setInterval(() => {
+      fetchSensorData();
+    }, 60000);
+
+    return () => clearInterval(interval); // Cleanup on unmount
   }, []);
 
   const handleDeleteHive = async (hiveId, hiveName) => {
@@ -188,23 +215,35 @@ export default function Dashboard() {
               
               {/* Information Section */}
               <div className="p-4 bg-white">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-yellow-700 bg-yellow-100 px-2 py-1 rounded">
                       ID: {hive.id}
                     </span>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-3 text-sm text-gray-600">
-                  <div className="flex items-center gap-1">
-                    <span className="font-semibold text-yellow-700">👑</span>
-                    <span>{hive.queen ? hive.queen : "Unknown"}</span>
+                
+                {/* Sensor Data Display */}
+                {sensorData[hive.id] && (
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="bg-blue-50 p-2 rounded border border-blue-200">
+                      <div className="font-semibold text-blue-700">🌡️ Temp</div>
+                      <div className="text-blue-900">{sensorData[hive.id].temperature}°C</div>
+                    </div>
+                    <div className="bg-green-50 p-2 rounded border border-green-200">
+                      <div className="font-semibold text-green-700">💧 Humidity</div>
+                      <div className="text-green-900">{sensorData[hive.id].humidity}%</div>
+                    </div>
+                    <div className="bg-orange-50 p-2 rounded border border-orange-200">
+                      <div className="font-semibold text-orange-700">💨 CO₂</div>
+                      <div className="text-orange-900">{sensorData[hive.id].co2} ppm</div>
+                    </div>
+                    <div className="bg-purple-50 p-2 rounded border border-purple-200">
+                      <div className="font-semibold text-purple-700">🔊 Sound</div>
+                      <div className="text-purple-900">{sensorData[hive.id].soundLevel} dB</div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <span className="font-semibold text-yellow-700">📡</span>
-                    <span>{typeof hive.sensors === 'number' ? hive.sensors : (Array.isArray(hive.sensors) ? hive.sensors.length : 0)} Sensors</span>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           ))}

@@ -3,6 +3,7 @@ package com.beehivemonitor.controller;
 import com.beehivemonitor.entity.Alert;
 import com.beehivemonitor.security.JwtTokenProvider;
 import com.beehivemonitor.service.AlertService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,8 +34,11 @@ public class AlertController {
         List<AlertResponse> responses = alerts.stream()
             .map(alert -> new AlertResponse(
                 alert.getId(),
-                alert.getTitle(),
-                alert.getMessage(),
+                alert.getName(),
+                alert.getHive().getId(),
+                alert.getHive().getName(),
+                alert.getTriggerConditions(),
+                alert.getIsTriggered() != null ? alert.getIsTriggered() : false,
                 alert.getCreatedAt().toString()
             ))
             .collect(Collectors.toList());
@@ -42,16 +46,116 @@ public class AlertController {
         return ResponseEntity.ok(responses);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<AlertResponse> getAlertById(@PathVariable Long id, 
+                                                       @RequestHeader("Authorization") String token) {
+        String email = getEmailFromToken(token);
+        Alert alert = alertService.getAlertById(id, email);
+        return ResponseEntity.ok(new AlertResponse(
+            alert.getId(),
+            alert.getName(),
+            alert.getHive().getId(),
+            alert.getHive().getName(),
+            alert.getTriggerConditions(),
+            alert.getIsTriggered() != null ? alert.getIsTriggered() : false,
+            alert.getCreatedAt().toString()
+        ));
+    }
+
+    @PostMapping
+    public ResponseEntity<AlertResponse> createAlert(@Valid @RequestBody AlertRequest request,
+                                                     @RequestHeader("Authorization") String token) {
+        String email = getEmailFromToken(token);
+        
+        Alert alert = new Alert();
+        alert.setName(request.name);
+        alert.setHive(new com.beehivemonitor.entity.Hive());
+        alert.getHive().setId(request.hiveId);
+        alert.setTriggerConditions(request.triggerConditions);
+        
+        alert = alertService.createAlert(alert, email);
+        return ResponseEntity.ok(new AlertResponse(
+            alert.getId(),
+            alert.getName(),
+            alert.getHive().getId(),
+            alert.getHive().getName(),
+            alert.getTriggerConditions(),
+            alert.getIsTriggered() != null ? alert.getIsTriggered() : false,
+            alert.getCreatedAt().toString()
+        ));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<AlertResponse> updateAlert(@PathVariable Long id,
+                                                      @Valid @RequestBody AlertRequest request,
+                                                      @RequestHeader("Authorization") String token) {
+        String email = getEmailFromToken(token);
+        
+        Alert alert = new Alert();
+        alert.setName(request.name);
+        alert.setHive(new com.beehivemonitor.entity.Hive());
+        alert.getHive().setId(request.hiveId);
+        alert.setTriggerConditions(request.triggerConditions);
+        
+        alert = alertService.updateAlert(id, alert, email);
+        return ResponseEntity.ok(new AlertResponse(
+            alert.getId(),
+            alert.getName(),
+            alert.getHive().getId(),
+            alert.getHive().getName(),
+            alert.getTriggerConditions(),
+            alert.getIsTriggered() != null ? alert.getIsTriggered() : false,
+            alert.getCreatedAt().toString()
+        ));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAlert(@PathVariable Long id,
+                                             @RequestHeader("Authorization") String token) {
+        String email = getEmailFromToken(token);
+        alertService.deleteAlert(id, email);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/reset")
+    public ResponseEntity<AlertResponse> resetAlert(@PathVariable Long id,
+                                                     @RequestHeader("Authorization") String token) {
+        String email = getEmailFromToken(token);
+        Alert alert = alertService.resetAlert(id, email);
+        return ResponseEntity.ok(new AlertResponse(
+            alert.getId(),
+            alert.getName(),
+            alert.getHive().getId(),
+            alert.getHive().getName(),
+            alert.getTriggerConditions(),
+            alert.getIsTriggered() != null ? alert.getIsTriggered() : false,
+            alert.getCreatedAt().toString()
+        ));
+    }
+
+    public static class AlertRequest {
+        public String name;
+        public Long hiveId;
+        public String triggerConditions; // JSON string
+    }
+
     public static class AlertResponse {
         public Long id;
-        public String title;
-        public String message;
+        public String name;
+        public Long hiveId;
+        public String hiveName;
+        public String triggerConditions;
+        public Boolean isTriggered;
         public String createdAt;
 
-        public AlertResponse(Long id, String title, String message, String createdAt) {
+        public AlertResponse(Long id, String name, Long hiveId, String hiveName, 
+                           String triggerConditions, Boolean isTriggered, String createdAt) {
             this.id = id;
-            this.title = title;
-            this.message = message;
+            this.name = name;
+            this.hiveId = hiveId;
+            this.hiveName = hiveName;
+            this.triggerConditions = triggerConditions;
+            this.isTriggered = isTriggered;
             this.createdAt = createdAt;
         }
     }

@@ -40,10 +40,15 @@ export function AuthProvider({ children }) {
   };
 
   const register = async (data) => {
-    const res = await axios.post("http://localhost:8080/api/auth/register", data);
-    localStorage.setItem("token", res.data.token);
-    setUser(res.data.user);
-    return res.data;
+    try {
+      const res = await axios.post("http://localhost:8080/api/auth/register", data);
+      localStorage.setItem("token", res.data.token);
+      setUser(res.data.user);
+      return res.data;
+    } catch (error) {
+      // Re-throw the error so the component can handle it
+      throw error;
+    }
   };
 
   const logout = () => {

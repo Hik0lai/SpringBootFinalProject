@@ -26,5 +26,15 @@ public class UserService {
             .map(AuthResponse.UserResponse::fromUser)
             .collect(Collectors.toList());
     }
+
+    public List<com.beehivemonitor.controller.UserController.UserNameResponse> getAllUserNames() {
+        return userRepository.findAll().stream()
+            .map(user -> new com.beehivemonitor.controller.UserController.UserNameResponse(
+                user.getId(),
+                user.getName(),
+                user.getEmail()
+            ))
+            .collect(Collectors.toList());
+    }
 }
 

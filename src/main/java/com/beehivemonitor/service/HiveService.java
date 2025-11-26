@@ -50,7 +50,8 @@ public class HiveService {
         Hive hive = getHiveById(id, email);
         hive.setName(updatedHive.getName());
         hive.setLocation(updatedHive.getLocation());
-        hive.setQueen(updatedHive.getQueen());
+        hive.setBirthDate(updatedHive.getBirthDate());
+        // Queen field removed - no longer editable
         return hiveRepository.save(hive);
     }
 

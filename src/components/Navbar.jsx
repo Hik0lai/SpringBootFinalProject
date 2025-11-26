@@ -14,6 +14,8 @@ export default function Navbar() {
           {user ? (
             <>
               <Link to="/">Dashboard</Link>
+              <Link to="/graphics">Graphics</Link>
+              <Link to="/weather">Weather</Link>
               <Link to="/inspections">Inspections</Link>
               <Link to="/alerts">Alerts</Link>
               <Link to="/profile">Profile</Link>
