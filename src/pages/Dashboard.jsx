@@ -239,8 +239,12 @@ export default function Dashboard() {
                       <div className="text-orange-900">{sensorData[hive.id].co2} ppm</div>
                     </div>
                     <div className="bg-purple-50 p-2 rounded border border-purple-200">
-                      <div className="font-semibold text-purple-700">🔊 Sound</div>
+                      <div className="font-semibold text-purple-700">🔊 Sound Level</div>
                       <div className="text-purple-900">{sensorData[hive.id].soundLevel} dB</div>
+                    </div>
+                    <div className="bg-yellow-50 p-2 rounded border border-yellow-200">
+                      <div className="font-semibold text-yellow-700">⚖️ Weight</div>
+                      <div className="text-yellow-900">{sensorData[hive.id].weight} kg</div>
                     </div>
                   </div>
                 )}

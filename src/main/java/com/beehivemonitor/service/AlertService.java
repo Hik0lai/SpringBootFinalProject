@@ -169,6 +169,8 @@ public class AlertService {
             case "sound":
             case "soundlevel":
                 return sensorData.soundLevel;
+            case "weight":
+                return sensorData.weight;
             default:
                 return null;
         }

@@ -69,11 +69,15 @@ public class SensorService {
             // Sound level: 40-100 dB
             double soundLevel = 40 + (100 - 40) * random.nextDouble();
             
+            // Weight: 4-12 kg
+            double weight = 4 + (12 - 4) * random.nextDouble();
+            
             sensorDataMap.put(hive.getId(), new SensorController.HiveSensorData(
                 Math.round(temperature * 10.0) / 10.0,  // Round to 1 decimal
                 Math.round(humidity * 10.0) / 10.0,      // Round to 1 decimal
                 Math.round(co2),                          // Round to integer
-                Math.round(soundLevel * 10.0) / 10.0      // Round to 1 decimal
+                Math.round(soundLevel * 10.0) / 10.0,    // Round to 1 decimal
+                Math.round(weight * 10.0) / 10.0         // Round to 1 decimal
             ));
         }
         

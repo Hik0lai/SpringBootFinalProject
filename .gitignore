@@ -28,3 +28,15 @@ dist-ssr
 .env.local
 .env.production
 
+# Maven build output
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Compiled class files
+*.class
+
+# IDE files
+*.iml
+*.ipr
+*.iws
+
