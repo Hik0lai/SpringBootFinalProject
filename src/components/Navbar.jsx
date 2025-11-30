@@ -19,6 +19,7 @@ export default function Navbar() {
               <Link to="/inspections">Inspections</Link>
               <Link to="/alerts">Alerts</Link>
               <Link to="/profile">Profile</Link>
+              <Link to="/settings">Settings</Link>
               {user.role === "ADMIN" && <Link to="/admin">Admin</Link>}
               <button
                 className="ml-2 px-4 py-1 rounded bg-yellow-500 text-white"

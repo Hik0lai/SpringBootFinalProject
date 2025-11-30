@@ -13,6 +13,7 @@ import AlertForm from './pages/AlertForm';
 import Graphics from './pages/Graphics';
 import Weather from './pages/Weather';
 import ProfilePage from './pages/ProfilePage';
+import Settings from './pages/Settings';
 import AdminPanel from './pages/AdminPanel';
 import Navbar from './components/Navbar';
 
@@ -143,6 +144,14 @@ function App() {
                 element={
                   <PrivateRoute>
                     <ProfilePage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <PrivateRoute>
+                    <Settings />
                   </PrivateRoute>
                 }
               />

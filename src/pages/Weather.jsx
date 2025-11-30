@@ -53,6 +53,7 @@ export default function Weather() {
     return new Date(timestamp * 1000).toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
+      hour12: false,
     });
   };
 
@@ -186,16 +187,16 @@ export default function Weather() {
         <div className="space-y-4">
           {Object.entries(groupedForecast).slice(0, 5).map(([date, items]) => (
             <div key={date} className="border-b border-gray-200 pb-4 last:border-b-0">
-              <div className="font-semibold text-gray-700 mb-2">
+              <div className="text-[18.4px] font-semibold text-gray-700 mb-2">
                 {formatDate(items[0].dateTime)}
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {items.slice(0, 4).map((item, idx) => (
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3">
+                {items.map((item, idx) => (
                   <div
                     key={idx}
                     className="bg-gray-50 p-3 rounded border border-gray-200"
                   >
-                    <div className="text-xs text-gray-600 mb-1">
+                    <div className="text-[15.84px] text-gray-600 mb-1">
                       {formatTime(item.dateTime)}
                     </div>
                     <div className="flex items-center gap-2 mb-2">
@@ -205,7 +206,7 @@ export default function Weather() {
                         className="w-[37px] h-[37px]"
                       />
                       <div>
-                        <div className="font-semibold text-gray-800">
+                        <div className="text-[19.2px] font-semibold text-gray-800">
                           {Math.round(item.temperature)}°C
                         </div>
                         <div className="text-xs text-gray-600 capitalize">
