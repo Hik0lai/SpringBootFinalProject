@@ -71,6 +71,59 @@ public class SensorService {
     }
 
     /**
+     * Get real-time sensor data for a single hive using GET endpoint
+     * Falls back to local generation if microservice is unavailable
+     * 
+     * @param hiveId The ID of the hive
+     * @param email The email of the user requesting the data (for authorization)
+     * @return Sensor data for the hive
+     */
+    public SensorController.HiveSensorData getRealtimeSensorDataForHive(Long hiveId, String email) {
+        Hive hive = hiveRepository.findById(hiveId)
+            .orElseThrow(() -> new RuntimeException("Hive not found"));
+        
+        // Verify ownership
+        if (!hive.getUser().getEmail().equals(email)) {
+            throw new RuntimeException("Unauthorized access to hive");
+        }
+        
+        // Try to call microservice using GET endpoint
+        try {
+            MicroserviceSensorDataDTO microserviceData = sensorMicroserviceClient.getSensorDataForHive(hiveId);
+            
+            if (microserviceData != null) {
+                // Convert microservice DTO to controller DTO
+                SensorController.HiveSensorData hiveSensorData = new SensorController.HiveSensorData(
+                    microserviceData.getTemperature(),
+                    microserviceData.getExternalTemperature(),
+                    microserviceData.getHumidity(),
+                    microserviceData.getCo2(),
+                    microserviceData.getSoundLevel(),
+                    microserviceData.getWeight()
+                );
+                
+                // Save historical data
+                saveHistoricalData(hive,
+                    microserviceData.getTemperature(),
+                    microserviceData.getExternalTemperature(),
+                    microserviceData.getHumidity(),
+                    microserviceData.getCo2(),
+                    microserviceData.getSoundLevel(),
+                    microserviceData.getWeight()
+                );
+                
+                return hiveSensorData;
+            }
+        } catch (FeignException e) {
+            // Microservice unavailable - fallback to local generation
+            System.err.println("Warning: Sensor microservice unavailable, using fallback: " + e.getMessage());
+        }
+        
+        // Fallback: Generate locally if microservice is unavailable
+        return generateSensorDataLocallyForSingleHive(hive);
+    }
+
+    /**
      * Calls the sensor microservice to get real-time sensor data for all hives
      * Falls back to local generation if microservice is unavailable
      */
@@ -170,6 +223,40 @@ public class SensorService {
         }
         
         return sensorDataMap;
+    }
+
+    /**
+     * Fallback method to generate sensor data locally for a single hive
+     */
+    private SensorController.HiveSensorData generateSensorDataLocallyForSingleHive(Hive hive) {
+        // Generate random values within specified ranges
+        double temperature = 15 + (30 - 15) * random.nextDouble();
+        double externalTemperature = 15 + (30 - 15) * random.nextDouble();
+        double humidity = 5 + (60 - 5) * random.nextDouble();
+        double co2 = 400 + (2000 - 400) * random.nextDouble();
+        double soundLevel = 40 + (100 - 40) * random.nextDouble();
+        double weight = 4 + (12 - 4) * random.nextDouble();
+        
+        double roundedTemp = Math.round(temperature * 10.0) / 10.0;
+        double roundedExtTemp = Math.round(externalTemperature * 10.0) / 10.0;
+        double roundedHumidity = Math.round(humidity * 10.0) / 10.0;
+        double roundedCo2 = Math.round(co2);
+        double roundedSound = Math.round(soundLevel * 10.0) / 10.0;
+        double roundedWeight = Math.round(weight * 10.0) / 10.0;
+        
+        SensorController.HiveSensorData sensorData = new SensorController.HiveSensorData(
+            roundedTemp,
+            roundedExtTemp,
+            roundedHumidity,
+            roundedCo2,
+            roundedSound,
+            roundedWeight
+        );
+        
+        // Save historical data
+        saveHistoricalData(hive, roundedTemp, roundedExtTemp, roundedHumidity, roundedCo2, roundedSound, roundedWeight);
+        
+        return sensorData;
     }
     
     /**

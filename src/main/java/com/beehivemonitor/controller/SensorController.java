@@ -38,6 +38,17 @@ public class SensorController {
         return ResponseEntity.ok(sensorService.getRealtimeDataForAllHives(email));
     }
 
+    /**
+     * Get real-time sensor data for a single hive using GET endpoint from microservice
+     */
+    @GetMapping("/realtime-data/hive/{hiveId}")
+    public ResponseEntity<HiveSensorData> getRealtimeDataForHive(
+            @PathVariable Long hiveId,
+            @RequestHeader("Authorization") String token) {
+        String email = getEmailFromToken(token);
+        return ResponseEntity.ok(sensorService.getRealtimeSensorDataForHive(hiveId, email));
+    }
+
     public static class HiveSensorData {
         public double temperature;
         public double externalTemperature;
