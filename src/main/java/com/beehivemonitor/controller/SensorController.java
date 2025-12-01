@@ -49,6 +49,44 @@ public class SensorController {
         return ResponseEntity.ok(sensorService.getRealtimeSensorDataForHive(hiveId, email));
     }
 
+    /**
+     * Update all sensor data for all user's beehives by calling the sensor microservice
+     * This endpoint explicitly triggers a refresh of sensor data from the microservice
+     */
+    @PostMapping("/update")
+    public ResponseEntity<java.util.Map<String, Object>> updateAllSensors(
+            @RequestHeader("Authorization") String token) {
+        String email = getEmailFromToken(token);
+        
+        try {
+            java.util.Map<Long, HiveSensorData> updatedData = sensorService.updateAllSensorData(email);
+            
+            java.util.Map<String, Object> response = new java.util.HashMap<>();
+            int hiveCount = updatedData != null ? updatedData.size() : 0;
+            
+            if (hiveCount == 0) {
+                response.put("message", "No beehives found. Please create a beehive first.");
+                response.put("updatedHives", 0);
+            } else {
+                response.put("message", "Sensor data updated successfully for " + hiveCount + " beehive(s)");
+                response.put("updatedHives", hiveCount);
+            }
+            response.put("sensorData", updatedData != null ? updatedData : new java.util.HashMap<>());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            // Log the error for debugging
+            System.err.println("Error updating sensors: " + e.getMessage());
+            e.printStackTrace();
+            
+            // Return error response
+            java.util.Map<String, Object> errorResponse = new java.util.HashMap<>();
+            errorResponse.put("error", e.getMessage() != null ? e.getMessage() : "Failed to update sensors");
+            errorResponse.put("message", "Failed to update sensors: " + (e.getMessage() != null ? e.getMessage() : "Unknown error"));
+            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
     public static class HiveSensorData {
         public double temperature;
         public double externalTemperature;

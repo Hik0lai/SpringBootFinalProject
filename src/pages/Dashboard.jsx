@@ -7,6 +7,7 @@ export default function Dashboard() {
   const [hives, setHives] = useState([]);
   const [sensorData, setSensorData] = useState({});
   const [loading, setLoading] = useState(true);
+  const [updatingSensors, setUpdatingSensors] = useState(false);
   const [error, setError] = useState("");
   const { user } = useAuth();
 
@@ -95,6 +96,70 @@ export default function Dashboard() {
     return () => clearInterval(interval); // Cleanup on unmount
   }, []);
 
+  const handleUpdateSensors = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("Not authenticated. Please log in again.");
+      return;
+    }
+
+    setUpdatingSensors(true);
+    setError("");
+
+    try {
+      // Try sending empty object instead of null
+      const response = await axios.post(
+        "http://localhost:8080/api/sensors/update",
+        {}, // Send empty object
+        {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Update sensor data from response
+      if (response.data?.sensorData) {
+        setSensorData(response.data.sensorData);
+        alert("Sensor data updated successfully!");
+      } else {
+        // If response doesn't include sensorData, fetch it separately
+        fetchSensorData();
+      }
+
+      // Show success message
+      const updatedCount = response.data?.updatedHives || 0;
+      if (updatedCount > 0) {
+        setError(""); // Clear any previous errors
+      }
+    } catch (err) {
+      console.error("Error updating sensors:", err);
+      
+      let errorMessage = "Failed to update sensors. Please try again.";
+      
+      if (err.response?.status === 401) {
+        errorMessage = "Authentication failed. Please log in again.";
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+      } else if (err.response?.data) {
+        errorMessage = err.response.data.error 
+          || err.response.data.message 
+          || err.response.data.errorMessage
+          || errorMessage;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      if (err.code === "ERR_NETWORK" || err.message === "Network Error") {
+        errorMessage = "Cannot connect to server. Please make sure the backend is running.";
+      }
+      
+      setError(errorMessage);
+    } finally {
+      setUpdatingSensors(false);
+    }
+  };
+
   const handleDeleteHive = async (hiveId, hiveName) => {
     // Show confirmation prompt
     const confirmed = window.confirm(
@@ -137,12 +202,18 @@ export default function Dashboard() {
           {error}
         </div>
       )}
-      <div className="mb-4">
+      <div className="mb-4 flex gap-3">
         <Link
           to="/add-hive"
           className="bg-yellow-500 px-4 py-2 rounded text-white hover:bg-yellow-600">
           + Add Hive
         </Link>
+        <button
+          onClick={handleUpdateSensors}
+          disabled={loading || updatingSensors || hives.length === 0}
+          className="bg-blue-500 px-4 py-2 rounded text-white hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed">
+          {updatingSensors ? "Updating..." : "🔄 Update Sensors"}
+        </button>
       </div>
       {loading ? (
         <div className="text-center py-8">

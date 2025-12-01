@@ -258,6 +258,21 @@ public class SensorService {
         
         return sensorData;
     }
+
+    /**
+     * Update all sensor data for all user's beehives by calling the sensor microservice
+     * This method explicitly triggers a refresh and saves the data
+     * 
+     * @param email The email of the user
+     * @return Map of updated sensor data keyed by hive ID
+     */
+    public Map<Long, SensorController.HiveSensorData> updateAllSensorData(String email) {
+        // This will call the microservice and save historical data
+        // The getRealtimeDataForAllHives method already handles FeignException and has fallback logic
+        Map<Long, SensorController.HiveSensorData> result = getRealtimeDataForAllHives(email);
+        // Ensure we always return a non-null map
+        return result != null ? result : new HashMap<>();
+    }
     
     /**
      * Scheduled task that saves sensor data at configured intervals for each user
