@@ -1,5 +1,6 @@
 package com.beehivemonitor.service;
 
+import com.beehivemonitor.client.SensorMicroserviceClient;
 import com.beehivemonitor.controller.SensorController;
 import com.beehivemonitor.dto.MicroserviceRealtimeRequest;
 import com.beehivemonitor.dto.MicroserviceRealtimeResponse;
@@ -14,14 +15,12 @@ import com.beehivemonitor.repository.HiveSensorDataRepository;
 import com.beehivemonitor.repository.SensorReadingRepository;
 import com.beehivemonitor.repository.UserRepository;
 import com.beehivemonitor.repository.UserSettingsRepository;
+import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.client.RestClientException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -50,10 +49,7 @@ public class SensorService {
     private UserSettingsRepository userSettingsRepository;
 
     @Autowired
-    private RestTemplate restTemplate;
-
-    @Value("${sensor.microservice.url}")
-    private String microserviceUrl;
+    private SensorMicroserviceClient sensorMicroserviceClient;
 
     private final Random random = new Random(); // Fallback if microservice is unavailable
     
@@ -91,9 +87,8 @@ public class SensorService {
         
         // Try to call microservice
         try {
-            String url = microserviceUrl + "/api/sensor-data/realtime";
             MicroserviceRealtimeRequest request = new MicroserviceRealtimeRequest(hiveIds);
-            MicroserviceRealtimeResponse response = restTemplate.postForObject(url, request, MicroserviceRealtimeResponse.class);
+            MicroserviceRealtimeResponse response = sensorMicroserviceClient.getRealtimeSensorData(request);
             
             if (response != null && response.getSensorData() != null) {
                 Map<Long, SensorController.HiveSensorData> sensorDataMap = new HashMap<>();
@@ -130,7 +125,7 @@ public class SensorService {
                 
                 return sensorDataMap;
             }
-        } catch (RestClientException e) {
+        } catch (FeignException e) {
             // Microservice unavailable - fallback to local generation
             System.err.println("Warning: Sensor microservice unavailable, using fallback: " + e.getMessage());
         }
@@ -209,9 +204,8 @@ public class SensorService {
                 if (!hiveIds.isEmpty()) {
                     // Try to call microservice for scheduled data
                     try {
-                        String url = microserviceUrl + "/api/sensor-data/realtime";
                         MicroserviceRealtimeRequest request = new MicroserviceRealtimeRequest(hiveIds);
-                        MicroserviceRealtimeResponse response = restTemplate.postForObject(url, request, MicroserviceRealtimeResponse.class);
+                        MicroserviceRealtimeResponse response = sensorMicroserviceClient.getRealtimeSensorData(request);
                         
                         if (response != null && response.getSensorData() != null) {
                             for (Map.Entry<Long, MicroserviceSensorDataDTO> entry : response.getSensorData().entrySet()) {
@@ -234,7 +228,7 @@ public class SensorService {
                             // Fallback to local generation
                             generateAndSaveSensorDataLocally(hives);
                         }
-                    } catch (RestClientException e) {
+                    } catch (FeignException e) {
                         // Microservice unavailable - fallback to local generation
                         System.err.println("Warning: Sensor microservice unavailable for scheduled save, using fallback: " + e.getMessage());
                         generateAndSaveSensorDataLocally(hives);

@@ -1,6 +1,8 @@
 package com.beehivemonitor.service;
 
+import com.beehivemonitor.client.NotificationMicroserviceClient;
 import com.beehivemonitor.controller.SensorController;
+import com.beehivemonitor.dto.NotificationRequest;
 import com.beehivemonitor.entity.Alert;
 import com.beehivemonitor.entity.Hive;
 import com.beehivemonitor.entity.User;
@@ -9,14 +11,11 @@ import com.beehivemonitor.repository.HiveRepository;
 import com.beehivemonitor.repository.UserRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.client.RestClientException;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,10 +35,7 @@ public class AlertService {
     private SensorService sensorService;
 
     @Autowired
-    private RestTemplate restTemplate;
-
-    @Value("${notification.microservice.url}")
-    private String notificationMicroserviceUrl;
+    private NotificationMicroserviceClient notificationMicroserviceClient;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -221,17 +217,16 @@ public class AlertService {
      */
     private void sendEmailNotification(User user, Alert alert) {
         try {
-            String url = notificationMicroserviceUrl + "/api/notifications/send";
+            NotificationRequest request = new NotificationRequest(
+                user.getEmail(),
+                "Alert Triggered",
+                "Alert triggered: " + alert.getName(),
+                "EMAIL",
+                alert.getId()
+            );
             
-            Map<String, Object> request = new HashMap<>();
-            request.put("recipientEmail", user.getEmail());
-            request.put("subject", "Alert Triggered");
-            request.put("message", "Alert triggered: " + alert.getName());
-            request.put("channel", "EMAIL");
-            request.put("alertId", alert.getId());
-            
-            restTemplate.postForObject(url, request, Map.class);
-        } catch (RestClientException e) {
+            notificationMicroserviceClient.sendNotification(request);
+        } catch (FeignException e) {
             // Log error but don't fail the alert check
             System.err.println("Failed to send email notification: " + e.getMessage());
         }
