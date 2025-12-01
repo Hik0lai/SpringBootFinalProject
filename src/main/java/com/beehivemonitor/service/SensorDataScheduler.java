@@ -54,6 +54,7 @@ public class SensorDataScheduler {
             for (Hive hive : hives) {
                 // Generate and save sensor data
                 double temperature = 15 + (30 - 15) * random.nextDouble();
+                double externalTemperature = 15 + (30 - 15) * random.nextDouble();
                 double humidity = 5 + (60 - 5) * random.nextDouble();
                 double co2 = 400 + (2000 - 400) * random.nextDouble();
                 double soundLevel = 40 + (100 - 40) * random.nextDouble();
@@ -62,6 +63,7 @@ public class SensorDataScheduler {
                 sensorService.saveHistoricalData(
                     hive,
                     Math.round(temperature * 10.0) / 10.0,
+                    Math.round(externalTemperature * 10.0) / 10.0,
                     Math.round(humidity * 10.0) / 10.0,
                     Math.round(co2),
                     Math.round(soundLevel * 10.0) / 10.0,

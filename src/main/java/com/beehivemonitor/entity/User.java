@@ -40,6 +40,9 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role = Role.USER;
     
+    @Column(nullable = false)
+    private Boolean emailNotificationEnabled = false; // Email notification preference
+    
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Hive> hives = new ArrayList<>();

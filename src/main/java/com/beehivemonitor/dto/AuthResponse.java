@@ -20,13 +20,15 @@ public class AuthResponse {
         private String name;
         private String email;
         private User.Role role;
+        private Boolean emailNotificationEnabled;
 
         public static UserResponse fromUser(User user) {
             return new UserResponse(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
-                user.getRole()
+                user.getRole(),
+                user.getEmailNotificationEnabled() != null ? user.getEmailNotificationEnabled() : false
             );
         }
     }

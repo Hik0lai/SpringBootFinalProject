@@ -36,5 +36,12 @@ public class UserService {
             ))
             .collect(Collectors.toList());
     }
+
+    public void updateEmailNotificationPreference(String email, Boolean enabled) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setEmailNotificationEnabled(enabled);
+        userRepository.save(user);
+    }
 }
 

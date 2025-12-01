@@ -38,6 +38,19 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUserNames());
     }
 
+    @PutMapping("/me/email-notifications")
+    public ResponseEntity<AuthResponse.UserResponse> updateEmailNotificationPreference(
+            @RequestHeader("Authorization") String token,
+            @RequestBody EmailNotificationRequest request) {
+        String email = tokenProvider.getEmailFromToken(token.substring(7));
+        userService.updateEmailNotificationPreference(email, request.enabled);
+        return ResponseEntity.ok(userService.getCurrentUser(email));
+    }
+
+    public static class EmailNotificationRequest {
+        public Boolean enabled;
+    }
+
     public static class UserNameResponse {
         public Long id;
         public String name;

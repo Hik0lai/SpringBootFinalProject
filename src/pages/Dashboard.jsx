@@ -227,8 +227,12 @@ export default function Dashboard() {
                 {sensorData[hive.id] && (
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div className="bg-blue-50 p-2 rounded border border-blue-200">
-                      <div className="font-semibold text-blue-700">🌡️ Temp</div>
+                      <div className="font-semibold text-blue-700">🌡️ Int. Temp</div>
                       <div className="text-blue-900">{sensorData[hive.id].temperature}°C</div>
+                    </div>
+                    <div className="bg-cyan-50 p-2 rounded border border-cyan-200">
+                      <div className="font-semibold text-cyan-700">🌡️ Ext. Temp</div>
+                      <div className="text-cyan-900">{sensorData[hive.id].externalTemperature}°C</div>
                     </div>
                     <div className="bg-green-50 p-2 rounded border border-green-200">
                       <div className="font-semibold text-green-700">💧 Humidity</div>

@@ -1,6 +1,9 @@
 package com.beehivemonitor.service;
 
 import com.beehivemonitor.controller.SensorController;
+import com.beehivemonitor.dto.MicroserviceRealtimeRequest;
+import com.beehivemonitor.dto.MicroserviceRealtimeResponse;
+import com.beehivemonitor.dto.MicroserviceSensorDataDTO;
 import com.beehivemonitor.dto.SensorReadingDTO;
 import com.beehivemonitor.entity.Hive;
 import com.beehivemonitor.entity.HiveSensorData;
@@ -12,10 +15,13 @@ import com.beehivemonitor.repository.SensorReadingRepository;
 import com.beehivemonitor.repository.UserRepository;
 import com.beehivemonitor.repository.UserSettingsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClientException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -43,7 +49,13 @@ public class SensorService {
     @Autowired
     private UserSettingsRepository userSettingsRepository;
 
-    private final Random random = new Random();
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Value("${sensor.microservice.url}")
+    private String microserviceUrl;
+
+    private final Random random = new Random(); // Fallback if microservice is unavailable
     
     // Track last save time per user
     private final Map<Long, LocalDateTime> lastSaveTime = new HashMap<>();
@@ -63,34 +75,87 @@ public class SensorService {
     }
 
     /**
-     * Simulates microservice that returns real-time sensor data for all hives
-     * Generates random values within specified ranges for each hive
+     * Calls the sensor microservice to get real-time sensor data for all hives
+     * Falls back to local generation if microservice is unavailable
      */
     public Map<Long, SensorController.HiveSensorData> getRealtimeDataForAllHives(String email) {
         User user = userRepository.findByEmail(email)
             .orElseThrow(() -> new RuntimeException("User not found"));
         
         List<Hive> hives = hiveRepository.findByUser(user);
+        List<Long> hiveIds = hives.stream().map(Hive::getId).collect(Collectors.toList());
+        
+        if (hiveIds.isEmpty()) {
+            return new HashMap<>();
+        }
+        
+        // Try to call microservice
+        try {
+            String url = microserviceUrl + "/api/sensor-data/realtime";
+            MicroserviceRealtimeRequest request = new MicroserviceRealtimeRequest(hiveIds);
+            MicroserviceRealtimeResponse response = restTemplate.postForObject(url, request, MicroserviceRealtimeResponse.class);
+            
+            if (response != null && response.getSensorData() != null) {
+                Map<Long, SensorController.HiveSensorData> sensorDataMap = new HashMap<>();
+                
+                for (Map.Entry<Long, MicroserviceSensorDataDTO> entry : response.getSensorData().entrySet()) {
+                    Long hiveId = entry.getKey();
+                    MicroserviceSensorDataDTO microserviceData = entry.getValue();
+                    
+                    // Convert microservice DTO to controller DTO
+                    SensorController.HiveSensorData hiveSensorData = new SensorController.HiveSensorData(
+                        microserviceData.getTemperature(),
+                        microserviceData.getExternalTemperature(),
+                        microserviceData.getHumidity(),
+                        microserviceData.getCo2(),
+                        microserviceData.getSoundLevel(),
+                        microserviceData.getWeight()
+                    );
+                    
+                    sensorDataMap.put(hiveId, hiveSensorData);
+                    
+                    // Save historical data
+                    Hive hive = hives.stream().filter(h -> h.getId().equals(hiveId)).findFirst().orElse(null);
+                    if (hive != null) {
+                        saveHistoricalData(hive, 
+                            microserviceData.getTemperature(),
+                            microserviceData.getExternalTemperature(),
+                            microserviceData.getHumidity(),
+                            microserviceData.getCo2(),
+                            microserviceData.getSoundLevel(),
+                            microserviceData.getWeight()
+                        );
+                    }
+                }
+                
+                return sensorDataMap;
+            }
+        } catch (RestClientException e) {
+            // Microservice unavailable - fallback to local generation
+            System.err.println("Warning: Sensor microservice unavailable, using fallback: " + e.getMessage());
+        }
+        
+        // Fallback: Generate locally if microservice is unavailable
+        return generateSensorDataLocally(hives);
+    }
+    
+    /**
+     * Fallback method to generate sensor data locally if microservice is unavailable
+     */
+    private Map<Long, SensorController.HiveSensorData> generateSensorDataLocally(List<Hive> hives) {
         Map<Long, SensorController.HiveSensorData> sensorDataMap = new HashMap<>();
         
         for (Hive hive : hives) {
             // Generate random values within specified ranges
-            // Temperature: 15-30°C
             double temperature = 15 + (30 - 15) * random.nextDouble();
-            
-            // Humidity: 5-60%
+            double externalTemperature = 15 + (30 - 15) * random.nextDouble();
             double humidity = 5 + (60 - 5) * random.nextDouble();
-            
-            // CO2: 400-2000 ppm
             double co2 = 400 + (2000 - 400) * random.nextDouble();
-            
-            // Sound level: 40-100 dB
             double soundLevel = 40 + (100 - 40) * random.nextDouble();
-            
-            // Weight: 4-12 kg
             double weight = 4 + (12 - 4) * random.nextDouble();
             
             double roundedTemp = Math.round(temperature * 10.0) / 10.0;
+            double roundedExtTemp = Math.round(externalTemperature * 10.0) / 10.0;
             double roundedHumidity = Math.round(humidity * 10.0) / 10.0;
             double roundedCo2 = Math.round(co2);
             double roundedSound = Math.round(soundLevel * 10.0) / 10.0;
@@ -98,11 +163,15 @@ public class SensorService {
             
             sensorDataMap.put(hive.getId(), new SensorController.HiveSensorData(
                 roundedTemp,
+                roundedExtTemp,
                 roundedHumidity,
                 roundedCo2,
                 roundedSound,
                 roundedWeight
             ));
+            
+            // Save historical data
+            saveHistoricalData(hive, roundedTemp, roundedExtTemp, roundedHumidity, roundedCo2, roundedSound, roundedWeight);
         }
         
         return sensorDataMap;
@@ -135,23 +204,41 @@ public class SensorService {
                 lastSave.plusMinutes(intervalMinutes).isEqual(now)) {
                 
                 List<Hive> hives = hiveRepository.findByUser(user);
+                List<Long> hiveIds = hives.stream().map(Hive::getId).collect(Collectors.toList());
                 
-                for (Hive hive : hives) {
-                    // Generate random values
-                    double temperature = 15 + (30 - 15) * random.nextDouble();
-                    double humidity = 5 + (60 - 5) * random.nextDouble();
-                    double co2 = 400 + (2000 - 400) * random.nextDouble();
-                    double soundLevel = 40 + (100 - 40) * random.nextDouble();
-                    double weight = 4 + (12 - 4) * random.nextDouble();
-                    
-                    double roundedTemp = Math.round(temperature * 10.0) / 10.0;
-                    double roundedHumidity = Math.round(humidity * 10.0) / 10.0;
-                    double roundedCo2 = Math.round(co2);
-                    double roundedSound = Math.round(soundLevel * 10.0) / 10.0;
-                    double roundedWeight = Math.round(weight * 10.0) / 10.0;
-                    
-                    // Save historical data (no deletion - all data is kept)
-                    saveHistoricalData(hive, roundedTemp, roundedHumidity, roundedCo2, roundedSound, roundedWeight);
+                if (!hiveIds.isEmpty()) {
+                    // Try to call microservice for scheduled data
+                    try {
+                        String url = microserviceUrl + "/api/sensor-data/realtime";
+                        MicroserviceRealtimeRequest request = new MicroserviceRealtimeRequest(hiveIds);
+                        MicroserviceRealtimeResponse response = restTemplate.postForObject(url, request, MicroserviceRealtimeResponse.class);
+                        
+                        if (response != null && response.getSensorData() != null) {
+                            for (Map.Entry<Long, MicroserviceSensorDataDTO> entry : response.getSensorData().entrySet()) {
+                                Long hiveId = entry.getKey();
+                                MicroserviceSensorDataDTO microserviceData = entry.getValue();
+                                
+                                Hive hive = hives.stream().filter(h -> h.getId().equals(hiveId)).findFirst().orElse(null);
+                                if (hive != null) {
+                                    saveHistoricalData(hive,
+                                        microserviceData.getTemperature(),
+                                        microserviceData.getExternalTemperature(),
+                                        microserviceData.getHumidity(),
+                                        microserviceData.getCo2(),
+                                        microserviceData.getSoundLevel(),
+                                        microserviceData.getWeight()
+                                    );
+                                }
+                            }
+                        } else {
+                            // Fallback to local generation
+                            generateAndSaveSensorDataLocally(hives);
+                        }
+                    } catch (RestClientException e) {
+                        // Microservice unavailable - fallback to local generation
+                        System.err.println("Warning: Sensor microservice unavailable for scheduled save, using fallback: " + e.getMessage());
+                        generateAndSaveSensorDataLocally(hives);
+                    }
                 }
                 
                 lastSaveTime.put(user.getId(), now);
@@ -159,12 +246,36 @@ public class SensorService {
         }
     }
     
+    /**
+     * Fallback method to generate and save sensor data locally
+     */
+    private void generateAndSaveSensorDataLocally(List<Hive> hives) {
+        for (Hive hive : hives) {
+            double temperature = 15 + (30 - 15) * random.nextDouble();
+            double externalTemperature = 15 + (30 - 15) * random.nextDouble();
+            double humidity = 5 + (60 - 5) * random.nextDouble();
+            double co2 = 400 + (2000 - 400) * random.nextDouble();
+            double soundLevel = 40 + (100 - 40) * random.nextDouble();
+            double weight = 4 + (12 - 4) * random.nextDouble();
+            
+            double roundedTemp = Math.round(temperature * 10.0) / 10.0;
+            double roundedExtTemp = Math.round(externalTemperature * 10.0) / 10.0;
+            double roundedHumidity = Math.round(humidity * 10.0) / 10.0;
+            double roundedCo2 = Math.round(co2);
+            double roundedSound = Math.round(soundLevel * 10.0) / 10.0;
+            double roundedWeight = Math.round(weight * 10.0) / 10.0;
+            
+            saveHistoricalData(hive, roundedTemp, roundedExtTemp, roundedHumidity, roundedCo2, roundedSound, roundedWeight);
+        }
+    }
+    
     @Transactional
-    public void saveHistoricalData(Hive hive, double temperature, double humidity, 
+    public void saveHistoricalData(Hive hive, double temperature, double externalTemperature, double humidity,
                                    double co2, double soundLevel, double weight) {
         HiveSensorData sensorData = new HiveSensorData();
         sensorData.setHive(hive);
         sensorData.setTemperature(temperature);
+        sensorData.setExternalTemperature(externalTemperature);
         sensorData.setHumidity(humidity);
         sensorData.setCo2(co2);
         sensorData.setSoundLevel(soundLevel);

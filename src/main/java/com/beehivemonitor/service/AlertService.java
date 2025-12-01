@@ -10,8 +10,11 @@ import com.beehivemonitor.repository.UserRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClientException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +35,12 @@ public class AlertService {
     @Autowired
     private SensorService sensorService;
 
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Value("${notification.microservice.url}")
+    private String notificationMicroserviceUrl;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public List<Alert> getAllAlertsByUser(String email) {
@@ -42,8 +51,14 @@ public class AlertService {
         // Check and update trigger status for each alert
         Map<Long, SensorController.HiveSensorData> sensorData = sensorService.getRealtimeDataForAllHives(email);
         for (Alert alert : alerts) {
+            boolean previousTriggered = alert.getIsTriggered() != null ? alert.getIsTriggered() : false;
             boolean triggered = checkAlertTriggered(alert, sensorData.get(alert.getHive().getId()));
             alert.setIsTriggered(triggered);
+            
+            // Send notification if alert was just triggered (was false, now true) and user has email notifications enabled
+            if (!previousTriggered && triggered && user.getEmailNotificationEnabled() != null && user.getEmailNotificationEnabled()) {
+                sendEmailNotification(user, alert);
+            }
         }
         
         return alerts;
@@ -77,23 +92,42 @@ public class AlertService {
         
         // Check initial trigger status
         Map<Long, SensorController.HiveSensorData> sensorData = sensorService.getRealtimeDataForAllHives(email);
-        alert.setIsTriggered(checkAlertTriggered(alert, sensorData.get(hive.getId())));
+        boolean triggered = checkAlertTriggered(alert, sensorData.get(hive.getId()));
+        alert.setIsTriggered(triggered);
         
-        return alertRepository.save(alert);
+        Alert savedAlert = alertRepository.save(alert);
+        
+        // Send notification if alert is triggered and user has email notifications enabled
+        User user = hive.getUser();
+        if (triggered && user.getEmailNotificationEnabled() != null && user.getEmailNotificationEnabled()) {
+            sendEmailNotification(user, savedAlert);
+        }
+        
+        return savedAlert;
     }
 
     @Transactional
     public Alert updateAlert(Long id, Alert updatedAlert, String email) {
         Alert alert = getAlertById(id, email);
+        boolean previousTriggered = alert.getIsTriggered() != null ? alert.getIsTriggered() : false;
         alert.setName(updatedAlert.getName());
         alert.setHive(updatedAlert.getHive());
         alert.setTriggerConditions(updatedAlert.getTriggerConditions());
         
         // Re-check trigger status
         Map<Long, SensorController.HiveSensorData> sensorData = sensorService.getRealtimeDataForAllHives(email);
-        alert.setIsTriggered(checkAlertTriggered(alert, sensorData.get(alert.getHive().getId())));
+        boolean triggered = checkAlertTriggered(alert, sensorData.get(alert.getHive().getId()));
+        alert.setIsTriggered(triggered);
         
-        return alertRepository.save(alert);
+        Alert savedAlert = alertRepository.save(alert);
+        
+        // Send notification if alert was just triggered (was false, now true) and user has email notifications enabled
+        User user = alert.getHive().getUser();
+        if (!previousTriggered && triggered && user.getEmailNotificationEnabled() != null && user.getEmailNotificationEnabled()) {
+            sendEmailNotification(user, savedAlert);
+        }
+        
+        return savedAlert;
     }
 
     @Transactional
@@ -161,7 +195,13 @@ public class AlertService {
     private Double getParameterValue(SensorController.HiveSensorData sensorData, String parameter) {
         switch (parameter.toLowerCase()) {
             case "temperature":
+            case "int. temperature":
+            case "int temperature":
                 return sensorData.temperature;
+            case "externaltemperature":
+            case "ext. temperature":
+            case "ext temperature":
+                return sensorData.externalTemperature;
             case "humidity":
                 return sensorData.humidity;
             case "co2":
@@ -173,6 +213,27 @@ public class AlertService {
                 return sensorData.weight;
             default:
                 return null;
+        }
+    }
+
+    /**
+     * Sends email notification via notification microservice
+     */
+    private void sendEmailNotification(User user, Alert alert) {
+        try {
+            String url = notificationMicroserviceUrl + "/api/notifications/send";
+            
+            Map<String, Object> request = new HashMap<>();
+            request.put("recipientEmail", user.getEmail());
+            request.put("subject", "Alert Triggered");
+            request.put("message", "Alert triggered: " + alert.getName());
+            request.put("channel", "EMAIL");
+            request.put("alertId", alert.getId());
+            
+            restTemplate.postForObject(url, request, Map.class);
+        } catch (RestClientException e) {
+            // Log error but don't fail the alert check
+            System.err.println("Failed to send email notification: " + e.getMessage());
         }
     }
 }

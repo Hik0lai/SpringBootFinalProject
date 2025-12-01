@@ -43,6 +43,7 @@ public class GraphicsController {
                 item.getId(),
                 item.getHive().getId(),
                 item.getTemperature(),
+                item.getExternalTemperature(),
                 item.getHumidity(),
                 item.getCo2(),
                 item.getSoundLevel(),
@@ -58,17 +59,19 @@ public class GraphicsController {
         public Long id;
         public Long hiveId;
         public Double temperature;
+        public Double externalTemperature;
         public Double humidity;
         public Double co2;
         public Double soundLevel;
         public Double weight;
         public String timestamp;
 
-        public HiveSensorDataResponse(Long id, Long hiveId, Double temperature, Double humidity,
+        public HiveSensorDataResponse(Long id, Long hiveId, Double temperature, Double externalTemperature, Double humidity,
                                      Double co2, Double soundLevel, Double weight, String timestamp) {
             this.id = id;
             this.hiveId = hiveId;
             this.temperature = temperature;
+            this.externalTemperature = externalTemperature;
             this.humidity = humidity;
             this.co2 = co2;
             this.soundLevel = soundLevel;

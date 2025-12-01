@@ -29,6 +29,7 @@ export default function Graphics() {
   const [customDays, setCustomDays] = useState("");
   const [selectedParams, setSelectedParams] = useState({
     temperature: false,
+    externalTemperature: false,
     humidity: false,
     soundLevel: false,
     weight: false,
@@ -127,15 +128,32 @@ export default function Graphics() {
 
       if (selectedParams.temperature) {
         charts.push({
-          title: "Temperature",
+          title: "Int. Temperature",
           unit: "°C",
           data: {
             labels,
             datasets: [{
-              label: "Temperature (°C)",
+              label: "Int. Temperature (°C)",
               data: data.map((item) => item.temperature),
               borderColor: "rgb(59, 130, 246)",
               backgroundColor: "rgba(59, 130, 246, 0.1)",
+              tension: 0.4,
+            }],
+          },
+        });
+      }
+
+      if (selectedParams.externalTemperature) {
+        charts.push({
+          title: "Ext. Temperature",
+          unit: "°C",
+          data: {
+            labels,
+            datasets: [{
+              label: "Ext. Temperature (°C)",
+              data: data.map((item) => item.externalTemperature),
+              borderColor: "rgb(14, 165, 233)",
+              backgroundColor: "rgba(14, 165, 233, 0.1)",
               tension: 0.4,
             }],
           },
@@ -342,7 +360,7 @@ export default function Graphics() {
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Select Parameters
           </label>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
             <label className="flex items-center space-x-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -350,7 +368,16 @@ export default function Graphics() {
                 onChange={() => handleParamChange("temperature")}
                 className="w-4 h-4 text-blue-600"
               />
-              <span className="text-sm text-gray-700">Temperature</span>
+              <span className="text-sm text-gray-700">Int. Temperature</span>
+            </label>
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={selectedParams.externalTemperature}
+                onChange={() => handleParamChange("externalTemperature")}
+                className="w-4 h-4 text-cyan-600"
+              />
+              <span className="text-sm text-gray-700">Ext. Temperature</span>
             </label>
             <label className="flex items-center space-x-2 cursor-pointer">
               <input

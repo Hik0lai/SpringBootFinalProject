@@ -76,7 +76,21 @@ export default function AlertsPage() {
     try {
       const conditions = JSON.parse(conditionsJson);
       return conditions.map(c => {
-        const param = c.parameter || "";
+        let param = c.parameter || "";
+        // Map parameter names to display names
+        if (param.toLowerCase() === "temperature") {
+          param = "Int. Temperature";
+        } else if (param.toLowerCase() === "externaltemperature" || param.toLowerCase() === "ext. temperature" || param.toLowerCase() === "ext temperature") {
+          param = "Ext. Temperature";
+        } else if (param.toLowerCase() === "humidity") {
+          param = "Humidity";
+        } else if (param.toLowerCase() === "co2") {
+          param = "CO₂";
+        } else if (param.toLowerCase() === "sound" || param.toLowerCase() === "soundlevel") {
+          param = "Sound Level";
+        } else if (param.toLowerCase() === "weight") {
+          param = "Weight";
+        }
         const op = c.operator || ">";
         const val = c.value || "";
         return `${param} ${op} ${val}`;

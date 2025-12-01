@@ -205,7 +205,8 @@ export default function AlertForm() {
                   required
                 >
                   <option value="">Parameter</option>
-                  <option value="temperature">Temperature</option>
+                  <option value="temperature">Int. Temperature</option>
+                  <option value="externaltemperature">Ext. Temperature</option>
                   <option value="humidity">Humidity</option>
                   <option value="co2">CO₂</option>
                   <option value="sound">Sound Level</option>

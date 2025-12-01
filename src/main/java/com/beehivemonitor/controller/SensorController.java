@@ -40,13 +40,15 @@ public class SensorController {
 
     public static class HiveSensorData {
         public double temperature;
+        public double externalTemperature;
         public double humidity;
         public double co2;
         public double soundLevel;
         public double weight;
 
-        public HiveSensorData(double temperature, double humidity, double co2, double soundLevel, double weight) {
+        public HiveSensorData(double temperature, double externalTemperature, double humidity, double co2, double soundLevel, double weight) {
             this.temperature = temperature;
+            this.externalTemperature = externalTemperature;
             this.humidity = humidity;
             this.co2 = co2;
             this.soundLevel = soundLevel;

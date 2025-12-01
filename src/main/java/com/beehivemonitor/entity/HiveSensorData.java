@@ -25,7 +25,10 @@ public class HiveSensorData {
     private Hive hive;
     
     @Column(nullable = false)
-    private Double temperature;
+    private Double temperature; // Internal temperature
+    
+    @Column(nullable = false)
+    private Double externalTemperature; // External temperature
     
     @Column(nullable = false)
     private Double humidity;
