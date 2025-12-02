@@ -148,8 +148,8 @@ export default function AlertsPage() {
                       {alert.isTriggered && (
                         <button
                           onClick={() => handleReset(alert.id)}
-                          className="text-[10px] bg-orange-500 text-white px-1.5 py-0.5 rounded hover:bg-orange-600 transition flex-shrink-0 whitespace-nowrap"
-                          title="Reset Alert Status (turn red circle back to green)"
+                          className="text-[10px] font-medium bg-orange-500 hover:bg-orange-600 text-white px-2 py-0.5 rounded transition flex-shrink-0 whitespace-nowrap shadow-sm"
+                          title="Reset Alert Status"
                         >
                           Reset
                         </button>

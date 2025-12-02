@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -58,12 +59,28 @@ public class UserController {
         return ResponseEntity.ok(userService.updateUserRole(userId, request.role, email));
     }
 
+    @PutMapping("/me/password")
+    public ResponseEntity<Map<String, String>> changePassword(
+            @RequestHeader("Authorization") String token,
+            @RequestBody ChangePasswordRequest request) {
+        String email = tokenProvider.getEmailFromToken(token.substring(7));
+        userService.changePassword(email, request.currentPassword, request.newPassword);
+        Map<String, String> response = new java.util.HashMap<>();
+        response.put("message", "Password changed successfully");
+        return ResponseEntity.ok(response);
+    }
+
     public static class EmailNotificationRequest {
         public Boolean enabled;
     }
 
     public static class UpdateRoleRequest {
         public User.Role role;
+    }
+
+    public static class ChangePasswordRequest {
+        public String currentPassword;
+        public String newPassword;
     }
 
     public static class UserNameResponse {
