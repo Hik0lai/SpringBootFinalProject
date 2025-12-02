@@ -1,6 +1,7 @@
 package com.beehivemonitor.controller;
 
 import com.beehivemonitor.dto.AuthResponse;
+import com.beehivemonitor.entity.User;
 import com.beehivemonitor.security.JwtTokenProvider;
 import com.beehivemonitor.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,8 +48,22 @@ public class UserController {
         return ResponseEntity.ok(userService.getCurrentUser(email));
     }
 
+    @PutMapping("/{userId}/role")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AuthResponse.UserResponse> updateUserRole(
+            @PathVariable Long userId,
+            @RequestHeader("Authorization") String token,
+            @RequestBody UpdateRoleRequest request) {
+        String email = tokenProvider.getEmailFromToken(token.substring(7));
+        return ResponseEntity.ok(userService.updateUserRole(userId, request.role, email));
+    }
+
     public static class EmailNotificationRequest {
         public Boolean enabled;
+    }
+
+    public static class UpdateRoleRequest {
+        public User.Role role;
     }
 
     public static class UserNameResponse {

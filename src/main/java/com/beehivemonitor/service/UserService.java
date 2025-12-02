@@ -43,5 +43,22 @@ public class UserService {
         user.setEmailNotificationEnabled(enabled);
         userRepository.save(user);
     }
+
+    public AuthResponse.UserResponse updateUserRole(Long userId, User.Role newRole, String adminEmail) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Prevent admin from removing their own admin role
+        User adminUser = userRepository.findByEmail(adminEmail)
+            .orElseThrow(() -> new RuntimeException("Admin user not found"));
+        
+        if (adminUser.getId().equals(userId) && user.getRole() == User.Role.ADMIN && newRole == User.Role.USER) {
+            throw new RuntimeException("You cannot remove admin role from yourself. Please ask another admin to do it.");
+        }
+        
+        user.setRole(newRole);
+        user = userRepository.save(user);
+        return AuthResponse.UserResponse.fromUser(user);
+    }
 }
 
