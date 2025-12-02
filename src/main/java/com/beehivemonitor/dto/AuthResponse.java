@@ -21,6 +21,7 @@ public class AuthResponse {
         private String email;
         private User.Role role;
         private Boolean emailNotificationEnabled;
+        private String telephone;
 
         public static UserResponse fromUser(User user) {
             return new UserResponse(
@@ -28,7 +29,8 @@ public class AuthResponse {
                 user.getName(),
                 user.getEmail(),
                 user.getRole(),
-                user.getEmailNotificationEnabled() != null ? user.getEmailNotificationEnabled() : false
+                user.getEmailNotificationEnabled() != null ? user.getEmailNotificationEnabled() : false,
+                user.getTelephone()
             );
         }
     }

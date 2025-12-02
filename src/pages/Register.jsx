@@ -8,13 +8,14 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [telephone, setTelephone] = useState("");
   const [error, setError] = useState("");
 
   async function handleRegister(e) {
     e.preventDefault();
     setError("");
     try {
-      await register({ email, name, password });
+      await register({ email, name, password, telephone: telephone || undefined });
       navigate("/");
     } catch (err) {
       let errorMessage = "Could not register. Please try again.";
@@ -53,6 +54,7 @@ export default function Register() {
         <input className="w-full border px-3 py-2 rounded" placeholder="Name" value={name} onChange={e=>setName(e.target.value)} required/>
         <input className="w-full border px-3 py-2 rounded" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} required />
         <input className="w-full border px-3 py-2 rounded" type="password" placeholder="Password" value={password} onChange={e=>setPassword(e.target.value)} required />
+        <input className="w-full border px-3 py-2 rounded" type="tel" placeholder="Telephone (optional)" value={telephone} onChange={e=>setTelephone(e.target.value)} />
         <button type="submit" className="w-full bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600 transition">Register</button>
       </form>
       <div className="text-sm mt-4 text-gray-700">

@@ -43,6 +43,9 @@ public class User {
     @Column(nullable = false)
     private Boolean emailNotificationEnabled = false; // Email notification preference
     
+    @Column(nullable = true)
+    private String telephone; // User telephone number
+    
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Hive> hives = new ArrayList<>();

@@ -19,6 +19,8 @@ public class RegisterRequest {
     
     @NotBlank
     private String password;
+    
+    private String telephone; // Optional telephone number
 }
 
 
