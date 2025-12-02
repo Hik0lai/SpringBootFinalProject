@@ -21,11 +21,16 @@ export default function Navbar() {
               <Link to="/profile">Profile</Link>
               <Link to="/settings">Settings</Link>
               {user.role === "ADMIN" && <Link to="/admin">Admin</Link>}
-              <button
-                className="ml-2 px-4 py-1 rounded bg-yellow-500 text-white"
-                onClick={() => { logout(); navigate("/login"); }}>
-                Logout
-              </button>
+              <div className="flex items-center gap-3 ml-12">
+                <span className="text-gray-700 font-medium">
+                  Welcome, {user.name || user.email}!
+                </span>
+                <button
+                  className="px-4 py-1 rounded bg-yellow-500 text-white hover:bg-yellow-600 transition"
+                  onClick={() => { logout(); navigate("/login"); }}>
+                  Logout
+                </button>
+              </div>
             </>
           ) : (
             <>
