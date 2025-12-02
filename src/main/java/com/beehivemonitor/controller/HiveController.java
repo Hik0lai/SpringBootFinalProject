@@ -1,11 +1,14 @@
 package com.beehivemonitor.controller;
 
 import com.beehivemonitor.entity.Hive;
+import com.beehivemonitor.entity.User;
+import com.beehivemonitor.repository.UserRepository;
 import com.beehivemonitor.security.JwtTokenProvider;
 import com.beehivemonitor.service.HiveService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,39 +24,54 @@ public class HiveController {
     @Autowired
     private JwtTokenProvider tokenProvider;
 
+    @Autowired
+    private UserRepository userRepository;
+
     private String getEmailFromToken(String authHeader) {
         return tokenProvider.getEmailFromToken(authHeader.substring(7));
+    }
+    
+    private User.Role getUserRole(String email) {
+        return userRepository.findByEmail(email)
+            .map(User::getRole)
+            .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
     @GetMapping
     public ResponseEntity<List<Hive>> getAllHives(@RequestHeader("Authorization") String token) {
-        String email = getEmailFromToken(token);
-        return ResponseEntity.ok(hiveService.getAllHivesByUser(email));
+        getEmailFromToken(token); // Validate token
+        return ResponseEntity.ok(hiveService.getAllHives());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Hive> getHiveById(@PathVariable Long id, @RequestHeader("Authorization") String token) {
-        String email = getEmailFromToken(token);
-        return ResponseEntity.ok(hiveService.getHiveById(id, email));
+        getEmailFromToken(token); // Validate token
+        return ResponseEntity.ok(hiveService.getHiveById(id));
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Hive> createHive(@Valid @RequestBody Hive hive, @RequestHeader("Authorization") String token) {
         String email = getEmailFromToken(token);
-        return ResponseEntity.ok(hiveService.createHive(hive, email));
+        User.Role role = getUserRole(email);
+        return ResponseEntity.ok(hiveService.createHive(hive, email, role));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Hive> updateHive(@PathVariable Long id, @Valid @RequestBody Hive hive, 
                                           @RequestHeader("Authorization") String token) {
         String email = getEmailFromToken(token);
-        return ResponseEntity.ok(hiveService.updateHive(id, hive, email));
+        User.Role role = getUserRole(email);
+        return ResponseEntity.ok(hiveService.updateHive(id, hive, email, role));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteHive(@PathVariable Long id, @RequestHeader("Authorization") String token) {
         String email = getEmailFromToken(token);
-        hiveService.deleteHive(id, email);
+        User.Role role = getUserRole(email);
+        hiveService.deleteHive(id, email, role);
         return ResponseEntity.noContent().build();
     }
 }

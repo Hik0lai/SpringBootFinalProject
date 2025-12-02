@@ -5,17 +5,23 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "hives")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(exclude = {"sensors", "inspections", "alerts", "user"})
+@ToString(exclude = {"sensors", "inspections", "alerts", "user"})
 public class Hive {
     
     @Id
@@ -36,7 +42,7 @@ public class Hive {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    @JsonIgnoreProperties({"hives", "password"})
+    @JsonIgnore
     private User user;
     
     @OneToMany(mappedBy = "hive", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -19,26 +19,24 @@ public class HiveService {
     @Autowired
     private UserRepository userRepository;
 
-    public List<Hive> getAllHivesByUser(String email) {
-        User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("User not found"));
-        return hiveRepository.findByUser(user);
+    public List<Hive> getAllHives() {
+        // Return all hives - all users can view all hives
+        return hiveRepository.findAll();
     }
 
-    public Hive getHiveById(Long id, String email) {
-        Hive hive = hiveRepository.findById(id)
+    public Hive getHiveById(Long id) {
+        // All users can view any hive - no ownership check needed
+        return hiveRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Hive not found"));
-        
-        // Verify ownership
-        if (!hive.getUser().getEmail().equals(email)) {
-            throw new RuntimeException("Unauthorized access to hive");
-        }
-        
-        return hive;
     }
 
     @Transactional
-    public Hive createHive(Hive hive, String email) {
+    public Hive createHive(Hive hive, String email, User.Role userRole) {
+        // Only admins can create hives
+        if (userRole != User.Role.ADMIN) {
+            throw new RuntimeException("Only administrators can create hives");
+        }
+        
         User user = userRepository.findByEmail(email)
             .orElseThrow(() -> new RuntimeException("User not found"));
         hive.setUser(user);
@@ -46,18 +44,27 @@ public class HiveService {
     }
 
     @Transactional
-    public Hive updateHive(Long id, Hive updatedHive, String email) {
-        Hive hive = getHiveById(id, email);
+    public Hive updateHive(Long id, Hive updatedHive, String email, User.Role userRole) {
+        // Only admins can update hives
+        if (userRole != User.Role.ADMIN) {
+            throw new RuntimeException("Only administrators can update hives");
+        }
+        
+        Hive hive = getHiveById(id);
         hive.setName(updatedHive.getName());
         hive.setLocation(updatedHive.getLocation());
         hive.setBirthDate(updatedHive.getBirthDate());
-        // Queen field removed - no longer editable
         return hiveRepository.save(hive);
     }
 
     @Transactional
-    public void deleteHive(Long id, String email) {
-        Hive hive = getHiveById(id, email);
+    public void deleteHive(Long id, String email, User.Role userRole) {
+        // Only admins can delete hives
+        if (userRole != User.Role.ADMIN) {
+            throw new RuntimeException("Only administrators can delete hives");
+        }
+        
+        Hive hive = getHiveById(id);
         hiveRepository.delete(hive);
     }
 }

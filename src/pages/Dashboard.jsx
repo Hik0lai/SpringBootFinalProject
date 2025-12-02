@@ -202,19 +202,21 @@ export default function Dashboard() {
           {error}
         </div>
       )}
-      <div className="mb-4 flex gap-3">
-        <Link
-          to="/add-hive"
-          className="bg-yellow-500 px-4 py-2 rounded text-white hover:bg-yellow-600">
-          + Add Hive
-        </Link>
-        <button
-          onClick={handleUpdateSensors}
-          disabled={loading || updatingSensors || hives.length === 0}
-          className="bg-blue-500 px-4 py-2 rounded text-white hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed">
-          {updatingSensors ? "Updating..." : "🔄 Update Sensors"}
-        </button>
-      </div>
+      {user && user.role === "ADMIN" && (
+        <div className="mb-4 flex gap-3">
+          <Link
+            to="/add-hive"
+            className="bg-yellow-500 px-4 py-2 rounded text-white hover:bg-yellow-600">
+            + Add Hive
+          </Link>
+          <button
+            onClick={handleUpdateSensors}
+            disabled={loading || updatingSensors || hives.length === 0}
+            className="bg-blue-500 px-4 py-2 rounded text-white hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed">
+            {updatingSensors ? "Updating..." : "🔄 Update Sensors"}
+          </button>
+        </div>
+      )}
       {loading ? (
         <div className="text-center py-8">
           <div className="text-lg text-yellow-700">Loading hives...</div>
@@ -230,31 +232,33 @@ export default function Dashboard() {
               key={hive.id}
               className="group relative bg-white rounded-lg shadow-lg hover:shadow-2xl border border-yellow-200 transition-all duration-300 overflow-hidden"
             >
-              {/* Delete Button */}
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleDeleteHive(hive.id, hive.name);
-                }}
-                className="absolute top-2 right-2 z-10 bg-orange-500 hover:bg-orange-600 text-white p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
-                title="Delete hive"
-              >
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  className="h-4 w-4" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
+              {/* Delete Button - Only for Admin */}
+              {user && user.role === "ADMIN" && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleDeleteHive(hive.id, hive.name);
+                  }}
+                  className="absolute top-2 right-2 z-10 bg-orange-500 hover:bg-orange-600 text-white p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+                  title="Delete hive"
                 >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
-                  />
-                </svg>
-              </button>
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className="h-4 w-4" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
+                    />
+                  </svg>
+                </button>
+              )}
 
               {/* Beehive Image - Clickable Link */}
               <Link to={`/hives/${hive.id}`} className="block">
@@ -330,11 +334,13 @@ export default function Dashboard() {
       ) : (
         <div className="text-center py-8">
           <div className="text-gray-600 mb-4">No hives found.</div>
-          <Link
-            to="/add-hive"
-            className="inline-block bg-yellow-500 px-6 py-2 rounded text-white hover:bg-yellow-600">
-            Create Your First Hive
-          </Link>
+          {user && user.role === "ADMIN" && (
+            <Link
+              to="/add-hive"
+              className="inline-block bg-yellow-500 px-6 py-2 rounded text-white hover:bg-yellow-600">
+              Create Your First Hive
+            </Link>
+          )}
         </div>
       )}
     </div>

@@ -63,21 +63,23 @@ export default function ProfilePage() {
         <span className="font-semibold">Role:</span>{" "}
         <span className="uppercase text-xs px-2 py-1 rounded bg-yellow-100 border border-yellow-400">{profile.role}</span>
       </div>
-      <div className="mb-4 border-t pt-4">
-        <label className="flex items-center space-x-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={emailNotifications}
-            onChange={handleEmailNotificationChange}
-            disabled={saving}
-            className="w-4 h-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500"
-          />
-          <span className="font-semibold">Send email notifications</span>
-        </label>
-        <p className="text-sm text-gray-600 mt-1 ml-6">
-          Receive email notifications when alerts are triggered
-        </p>
-      </div>
+      {user && user.role === "ADMIN" && (
+        <div className="mb-4 border-t pt-4">
+          <label className="flex items-center space-x-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={emailNotifications}
+              onChange={handleEmailNotificationChange}
+              disabled={saving}
+              className="w-4 h-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500"
+            />
+            <span className="font-semibold">Send email notifications</span>
+          </label>
+          <p className="text-sm text-gray-600 mt-1 ml-6">
+            Receive email notifications when alerts are triggered
+          </p>
+        </div>
+      )}
       {message && (
         <div className={`p-3 rounded text-sm ${
           message.includes("Failed") 

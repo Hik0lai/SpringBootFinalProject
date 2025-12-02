@@ -14,12 +14,12 @@ export default function Navbar() {
           {user ? (
             <>
               <Link to="/">Dashboard</Link>
-              <Link to="/graphics">Graphics</Link>
+              {user.role === "ADMIN" && <Link to="/graphics">Graphics</Link>}
               <Link to="/weather">Weather</Link>
-              <Link to="/inspections">Inspections</Link>
-              <Link to="/alerts">Alerts</Link>
+              {user.role === "ADMIN" && <Link to="/inspections">Inspections</Link>}
+              {user.role === "ADMIN" && <Link to="/alerts">Alerts</Link>}
               <Link to="/profile">Profile</Link>
-              <Link to="/settings">Settings</Link>
+              {user.role === "ADMIN" && <Link to="/settings">Settings</Link>}
               {user.role === "ADMIN" && <Link to="/admin">Admin</Link>}
               <div className="flex items-center gap-3 ml-12">
                 <span className="text-gray-700 font-medium">

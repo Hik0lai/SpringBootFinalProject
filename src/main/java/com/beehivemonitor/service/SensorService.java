@@ -82,10 +82,7 @@ public class SensorService {
         Hive hive = hiveRepository.findById(hiveId)
             .orElseThrow(() -> new RuntimeException("Hive not found"));
         
-        // Verify ownership
-        if (!hive.getUser().getEmail().equals(email)) {
-            throw new RuntimeException("Unauthorized access to hive");
-        }
+        // All users can view sensor data for any hive - no ownership check needed
         
         // Try to call microservice using GET endpoint
         try {
@@ -128,10 +125,8 @@ public class SensorService {
      * Falls back to local generation if microservice is unavailable
      */
     public Map<Long, SensorController.HiveSensorData> getRealtimeDataForAllHives(String email) {
-        User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        List<Hive> hives = hiveRepository.findByUser(user);
+        // Return sensor data for ALL hives - all users can view all hives
+        List<Hive> hives = hiveRepository.findAll();
         List<Long> hiveIds = hives.stream().map(Hive::getId).collect(Collectors.toList());
         
         if (hiveIds.isEmpty()) {
@@ -163,17 +158,16 @@ public class SensorService {
                     sensorDataMap.put(hiveId, hiveSensorData);
                     
                     // Save historical data
-                    Hive hive = hives.stream().filter(h -> h.getId().equals(hiveId)).findFirst().orElse(null);
-                    if (hive != null) {
-                        saveHistoricalData(hive, 
+                    hives.stream().filter(h -> h.getId().equals(hiveId)).findFirst().ifPresent(hive ->
+                        saveHistoricalData(hive,
                             microserviceData.getTemperature(),
                             microserviceData.getExternalTemperature(),
                             microserviceData.getHumidity(),
                             microserviceData.getCo2(),
                             microserviceData.getSoundLevel(),
                             microserviceData.getWeight()
-                        );
-                    }
+                        )
+                    );
                 }
                 
                 return sensorDataMap;
@@ -314,8 +308,7 @@ public class SensorService {
                                 Long hiveId = entry.getKey();
                                 MicroserviceSensorDataDTO microserviceData = entry.getValue();
                                 
-                                Hive hive = hives.stream().filter(h -> h.getId().equals(hiveId)).findFirst().orElse(null);
-                                if (hive != null) {
+                                hives.stream().filter(h -> h.getId().equals(hiveId)).findFirst().ifPresent(hive ->
                                     saveHistoricalData(hive,
                                         microserviceData.getTemperature(),
                                         microserviceData.getExternalTemperature(),
@@ -323,8 +316,8 @@ public class SensorService {
                                         microserviceData.getCo2(),
                                         microserviceData.getSoundLevel(),
                                         microserviceData.getWeight()
-                                    );
-                                }
+                                    )
+                                );
                             }
                         } else {
                             // Fallback to local generation

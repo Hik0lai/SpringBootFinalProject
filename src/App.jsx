@@ -62,7 +62,7 @@ function App() {
               <Route
                 path="/add-hive"
                 element={
-                  <PrivateRoute>
+                  <PrivateRoute adminOnly>
                     <HiveForm />
                   </PrivateRoute>
                 }
@@ -70,7 +70,7 @@ function App() {
               <Route
                 path="/edit-hive/:hiveId"
                 element={
-                  <PrivateRoute>
+                  <PrivateRoute adminOnly>
                     <HiveForm />
                   </PrivateRoute>
                 }
@@ -78,7 +78,7 @@ function App() {
               <Route
                 path="/graphics"
                 element={
-                  <PrivateRoute>
+                  <PrivateRoute adminOnly>
                     <Graphics />
                   </PrivateRoute>
                 }
@@ -94,7 +94,7 @@ function App() {
               <Route
                 path="/inspections"
                 element={
-                  <PrivateRoute>
+                  <PrivateRoute adminOnly>
                     <InspectionList />
                   </PrivateRoute>
                 }
@@ -102,7 +102,7 @@ function App() {
               <Route
                 path="/add-inspection"
                 element={
-                  <PrivateRoute>
+                  <PrivateRoute adminOnly>
                     <InspectionForm />
                   </PrivateRoute>
                 }
@@ -110,7 +110,7 @@ function App() {
               <Route
                 path="/edit-inspection/:inspectionId"
                 element={
-                  <PrivateRoute>
+                  <PrivateRoute adminOnly>
                     <InspectionForm />
                   </PrivateRoute>
                 }
@@ -118,7 +118,7 @@ function App() {
               <Route
                 path="/alerts"
                 element={
-                  <PrivateRoute>
+                  <PrivateRoute adminOnly>
                     <AlertsPage />
                   </PrivateRoute>
                 }
@@ -126,7 +126,7 @@ function App() {
               <Route
                 path="/add-alert"
                 element={
-                  <PrivateRoute>
+                  <PrivateRoute adminOnly>
                     <AlertForm />
                   </PrivateRoute>
                 }
@@ -134,7 +134,7 @@ function App() {
               <Route
                 path="/edit-alert/:alertId"
                 element={
-                  <PrivateRoute>
+                  <PrivateRoute adminOnly>
                     <AlertForm />
                   </PrivateRoute>
                 }
@@ -150,7 +150,7 @@ function App() {
               <Route
                 path="/settings"
                 element={
-                  <PrivateRoute>
+                  <PrivateRoute adminOnly>
                     <Settings />
                   </PrivateRoute>
                 }

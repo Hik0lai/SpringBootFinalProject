@@ -3,8 +3,11 @@ package com.beehivemonitor.controller;
 import com.beehivemonitor.dto.SensorReadingDTO;
 import com.beehivemonitor.security.JwtTokenProvider;
 import com.beehivemonitor.service.SensorService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,6 +16,8 @@ import java.util.List;
 @RequestMapping("/api/sensors")
 @CrossOrigin(origins = "http://localhost:5173")
 public class SensorController {
+
+    private static final Logger logger = LoggerFactory.getLogger(SensorController.class);
 
     @Autowired
     private SensorService sensorService;
@@ -54,6 +59,7 @@ public class SensorController {
      * This endpoint explicitly triggers a refresh of sensor data from the microservice
      */
     @PostMapping("/update")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<java.util.Map<String, Object>> updateAllSensors(
             @RequestHeader("Authorization") String token) {
         String email = getEmailFromToken(token);
@@ -76,8 +82,7 @@ public class SensorController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             // Log the error for debugging
-            System.err.println("Error updating sensors: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Error updating sensors: {}", e.getMessage(), e);
             
             // Return error response
             java.util.Map<String, Object> errorResponse = new java.util.HashMap<>();
