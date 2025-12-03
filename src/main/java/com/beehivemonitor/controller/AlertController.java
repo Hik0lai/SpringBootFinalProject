@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -47,7 +48,7 @@ public class AlertController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AlertResponse> getAlertById(@PathVariable Long id, 
+    public ResponseEntity<AlertResponse> getAlertById(@PathVariable UUID id, 
                                                        @RequestHeader("Authorization") String token) {
         String email = getEmailFromToken(token);
         Alert alert = alertService.getAlertById(id, email);
@@ -86,7 +87,7 @@ public class AlertController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<AlertResponse> updateAlert(@PathVariable Long id,
+    public ResponseEntity<AlertResponse> updateAlert(@PathVariable UUID id,
                                                       @Valid @RequestBody AlertRequest request,
                                                       @RequestHeader("Authorization") String token) {
         String email = getEmailFromToken(token);
@@ -110,7 +111,7 @@ public class AlertController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteAlert(@PathVariable Long id,
+    public ResponseEntity<Void> deleteAlert(@PathVariable UUID id,
                                              @RequestHeader("Authorization") String token) {
         String email = getEmailFromToken(token);
         alertService.deleteAlert(id, email);
@@ -118,7 +119,7 @@ public class AlertController {
     }
 
     @PostMapping("/{id}/reset")
-    public ResponseEntity<AlertResponse> resetAlert(@PathVariable Long id,
+    public ResponseEntity<AlertResponse> resetAlert(@PathVariable UUID id,
                                                      @RequestHeader("Authorization") String token) {
         String email = getEmailFromToken(token);
         Alert alert = alertService.resetAlert(id, email);
@@ -135,20 +136,20 @@ public class AlertController {
 
     public static class AlertRequest {
         public String name;
-        public Long hiveId;
+        public UUID hiveId;
         public String triggerConditions; // JSON string
     }
 
     public static class AlertResponse {
-        public Long id;
+        public UUID id;
         public String name;
-        public Long hiveId;
+        public UUID hiveId;
         public String hiveName;
         public String triggerConditions;
         public Boolean isTriggered;
         public String createdAt;
 
-        public AlertResponse(Long id, String name, Long hiveId, String hiveName, 
+        public AlertResponse(UUID id, String name, UUID hiveId, String hiveName, 
                            String triggerConditions, Boolean isTriggered, String createdAt) {
             this.id = id;
             this.name = name;

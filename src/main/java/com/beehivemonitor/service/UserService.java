@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -49,7 +50,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public AuthResponse.UserResponse updateUserRole(Long userId, User.Role newRole, String adminEmail) {
+    public AuthResponse.UserResponse updateUserRole(UUID userId, User.Role newRole, String adminEmail) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
         

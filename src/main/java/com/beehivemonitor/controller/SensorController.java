@@ -11,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/sensors")
@@ -30,14 +31,14 @@ public class SensorController {
     }
 
     @GetMapping("/last-readings")
-    public ResponseEntity<List<SensorReadingDTO>> getLastReadings(@RequestParam Long hiveId,
+    public ResponseEntity<List<SensorReadingDTO>> getLastReadings(@RequestParam UUID hiveId,
                                                                    @RequestHeader("Authorization") String token) {
         String email = getEmailFromToken(token);
         return ResponseEntity.ok(sensorService.getLatestReadingsByHiveId(hiveId, email));
     }
 
     @GetMapping("/realtime-data")
-    public ResponseEntity<java.util.Map<Long, HiveSensorData>> getRealtimeDataForAllHives(
+    public ResponseEntity<java.util.Map<UUID, HiveSensorData>> getRealtimeDataForAllHives(
             @RequestHeader("Authorization") String token) {
         String email = getEmailFromToken(token);
         return ResponseEntity.ok(sensorService.getRealtimeDataForAllHives(email));
@@ -48,7 +49,7 @@ public class SensorController {
      */
     @GetMapping("/realtime-data/hive/{hiveId}")
     public ResponseEntity<HiveSensorData> getRealtimeDataForHive(
-            @PathVariable Long hiveId,
+            @PathVariable UUID hiveId,
             @RequestHeader("Authorization") String token) {
         String email = getEmailFromToken(token);
         return ResponseEntity.ok(sensorService.getRealtimeSensorDataForHive(hiveId, email));
@@ -65,7 +66,7 @@ public class SensorController {
         String email = getEmailFromToken(token);
         
         try {
-            java.util.Map<Long, HiveSensorData> updatedData = sensorService.updateAllSensorData(email);
+            java.util.Map<UUID, HiveSensorData> updatedData = sensorService.updateAllSensorData(email);
             
             java.util.Map<String, Object> response = new java.util.HashMap<>();
             int hiveCount = updatedData != null ? updatedData.size() : 0;

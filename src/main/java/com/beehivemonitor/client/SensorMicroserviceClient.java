@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.UUID;
+
 /**
  * Feign Client for communicating with the Sensor Microservice
  */
@@ -31,6 +33,6 @@ public interface SensorMicroserviceClient {
      * @return Sensor data for the specified hive
      */
     @GetMapping("/api/sensor-data/hive/{hiveId}")
-    MicroserviceSensorDataDTO getSensorDataForHive(@PathVariable("hiveId") Long hiveId);
+    MicroserviceSensorDataDTO getSensorDataForHive(@PathVariable("hiveId") UUID hiveId);
 }
 

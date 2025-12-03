@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -16,7 +18,7 @@ public class AuthResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class UserResponse {
-        private Long id;
+        private UUID id;
         private String name;
         private String email;
         private User.Role role;

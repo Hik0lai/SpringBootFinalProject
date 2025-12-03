@@ -12,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/hives")
@@ -44,7 +45,7 @@ public class HiveController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Hive> getHiveById(@PathVariable Long id, @RequestHeader("Authorization") String token) {
+    public ResponseEntity<Hive> getHiveById(@PathVariable UUID id, @RequestHeader("Authorization") String token) {
         getEmailFromToken(token); // Validate token
         return ResponseEntity.ok(hiveService.getHiveById(id));
     }
@@ -59,19 +60,19 @@ public class HiveController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Hive> updateHive(@PathVariable Long id, @Valid @RequestBody Hive hive, 
+    public ResponseEntity<Hive> updateHive(@PathVariable UUID id, @Valid @RequestBody Hive hive, 
                                           @RequestHeader("Authorization") String token) {
         String email = getEmailFromToken(token);
         User.Role role = getUserRole(email);
-        return ResponseEntity.ok(hiveService.updateHive(id, hive, email, role));
+        return ResponseEntity.ok(hiveService.updateHive(id, hive, role));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteHive(@PathVariable Long id, @RequestHeader("Authorization") String token) {
+    public ResponseEntity<Void> deleteHive(@PathVariable UUID id, @RequestHeader("Authorization") String token) {
         String email = getEmailFromToken(token);
         User.Role role = getUserRole(email);
-        hiveService.deleteHive(id, email, role);
+        hiveService.deleteHive(id, role);
         return ResponseEntity.noContent().build();
     }
 }

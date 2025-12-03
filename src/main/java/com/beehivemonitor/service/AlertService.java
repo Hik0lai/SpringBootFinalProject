@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class AlertService {
@@ -45,7 +46,7 @@ public class AlertService {
         List<Alert> alerts = alertRepository.findByUserId(user.getId());
         
         // Check and update trigger status for each alert
-        Map<Long, SensorController.HiveSensorData> sensorData = sensorService.getRealtimeDataForAllHives(email);
+        Map<UUID, SensorController.HiveSensorData> sensorData = sensorService.getRealtimeDataForAllHives(email);
         for (Alert alert : alerts) {
             boolean previousTriggered = alert.getIsTriggered() != null ? alert.getIsTriggered() : false;
             boolean triggered = checkAlertTriggered(alert, sensorData.get(alert.getHive().getId()));
@@ -60,7 +61,7 @@ public class AlertService {
         return alerts;
     }
 
-    public Alert getAlertById(Long id, String email) {
+    public Alert getAlertById(UUID id, String email) {
         Alert alert = alertRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Alert not found"));
         
@@ -87,7 +88,7 @@ public class AlertService {
         alert.setIsTriggered(false);
         
         // Check initial trigger status
-        Map<Long, SensorController.HiveSensorData> sensorData = sensorService.getRealtimeDataForAllHives(email);
+        Map<UUID, SensorController.HiveSensorData> sensorData = sensorService.getRealtimeDataForAllHives(email);
         boolean triggered = checkAlertTriggered(alert, sensorData.get(hive.getId()));
         alert.setIsTriggered(triggered);
         
@@ -103,7 +104,7 @@ public class AlertService {
     }
 
     @Transactional
-    public Alert updateAlert(Long id, Alert updatedAlert, String email) {
+    public Alert updateAlert(UUID id, Alert updatedAlert, String email) {
         Alert alert = getAlertById(id, email);
         boolean previousTriggered = alert.getIsTriggered() != null ? alert.getIsTriggered() : false;
         alert.setName(updatedAlert.getName());
@@ -111,7 +112,7 @@ public class AlertService {
         alert.setTriggerConditions(updatedAlert.getTriggerConditions());
         
         // Re-check trigger status
-        Map<Long, SensorController.HiveSensorData> sensorData = sensorService.getRealtimeDataForAllHives(email);
+        Map<UUID, SensorController.HiveSensorData> sensorData = sensorService.getRealtimeDataForAllHives(email);
         boolean triggered = checkAlertTriggered(alert, sensorData.get(alert.getHive().getId()));
         alert.setIsTriggered(triggered);
         
@@ -127,13 +128,13 @@ public class AlertService {
     }
 
     @Transactional
-    public void deleteAlert(Long id, String email) {
+    public void deleteAlert(UUID id, String email) {
         Alert alert = getAlertById(id, email);
         alertRepository.delete(alert);
     }
 
     @Transactional
-    public Alert resetAlert(Long id, String email) {
+    public Alert resetAlert(UUID id, String email) {
         Alert alert = getAlertById(id, email);
         alert.setIsTriggered(false);
         return alertRepository.save(alert);
@@ -147,7 +148,7 @@ public class AlertService {
         try {
             List<Map<String, Object>> conditions = objectMapper.readValue(
                 alert.getTriggerConditions(),
-                new TypeReference<List<Map<String, Object>>>() {}
+                new TypeReference<>() {}
             );
 
             // All conditions must be met (AND logic)
@@ -161,21 +162,13 @@ public class AlertService {
                     return false;
                 }
 
-                boolean conditionMet = false;
-                switch (operator) {
-                    case ">":
-                        conditionMet = currentValue > threshold;
-                        break;
-                    case ">=":
-                        conditionMet = currentValue >= threshold;
-                        break;
-                    case "<":
-                        conditionMet = currentValue < threshold;
-                        break;
-                    case "<=":
-                        conditionMet = currentValue <= threshold;
-                        break;
-                }
+                boolean conditionMet = switch (operator) {
+                    case ">" -> currentValue > threshold;
+                    case ">=" -> currentValue >= threshold;
+                    case "<" -> currentValue < threshold;
+                    case "<=" -> currentValue <= threshold;
+                    default -> false;
+                };
 
                 if (!conditionMet) {
                     return false; // One condition failed, alert not triggered
@@ -189,27 +182,15 @@ public class AlertService {
     }
 
     private Double getParameterValue(SensorController.HiveSensorData sensorData, String parameter) {
-        switch (parameter.toLowerCase()) {
-            case "temperature":
-            case "int. temperature":
-            case "int temperature":
-                return sensorData.temperature;
-            case "externaltemperature":
-            case "ext. temperature":
-            case "ext temperature":
-                return sensorData.externalTemperature;
-            case "humidity":
-                return sensorData.humidity;
-            case "co2":
-                return sensorData.co2;
-            case "sound":
-            case "soundlevel":
-                return sensorData.soundLevel;
-            case "weight":
-                return sensorData.weight;
-            default:
-                return null;
-        }
+        return switch (parameter.toLowerCase()) {
+            case "temperature", "int. temperature", "int temperature" -> sensorData.temperature;
+            case "externaltemperature", "ext. temperature", "ext temperature" -> sensorData.externalTemperature;
+            case "humidity" -> sensorData.humidity;
+            case "co2" -> sensorData.co2;
+            case "sound", "soundlevel" -> sensorData.soundLevel;
+            case "weight" -> sensorData.weight;
+            default -> null;
+        };
     }
 
     /**

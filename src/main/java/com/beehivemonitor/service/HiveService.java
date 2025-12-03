@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class HiveService {
@@ -24,7 +25,7 @@ public class HiveService {
         return hiveRepository.findAll();
     }
 
-    public Hive getHiveById(Long id) {
+    public Hive getHiveById(UUID id) {
         // All users can view any hive - no ownership check needed
         return hiveRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Hive not found"));
@@ -44,7 +45,7 @@ public class HiveService {
     }
 
     @Transactional
-    public Hive updateHive(Long id, Hive updatedHive, String email, User.Role userRole) {
+    public Hive updateHive(UUID id, Hive updatedHive, User.Role userRole) {
         // Only admins can update hives
         if (userRole != User.Role.ADMIN) {
             throw new RuntimeException("Only administrators can update hives");
@@ -58,7 +59,7 @@ public class HiveService {
     }
 
     @Transactional
-    public void deleteHive(Long id, String email, User.Role userRole) {
+    public void deleteHive(UUID id, User.Role userRole) {
         // Only admins can delete hives
         if (userRole != User.Role.ADMIN) {
             throw new RuntimeException("Only administrators can delete hives");

@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -54,9 +55,9 @@ public class SensorService {
     private final Random random = new Random(); // Fallback if microservice is unavailable
     
     // Track last save time per user
-    private final Map<Long, LocalDateTime> lastSaveTime = new HashMap<>();
+    private final Map<UUID, LocalDateTime> lastSaveTime = new HashMap<>();
 
-    public List<SensorReadingDTO> getLatestReadingsByHiveId(Long hiveId, String email) {
+    public List<SensorReadingDTO> getLatestReadingsByHiveId(UUID hiveId, String email) {
         Hive hive = hiveRepository.findById(hiveId)
             .orElseThrow(() -> new RuntimeException("Hive not found"));
         
@@ -78,7 +79,7 @@ public class SensorService {
      * @param email The email of the user requesting the data (for authorization)
      * @return Sensor data for the hive
      */
-    public SensorController.HiveSensorData getRealtimeSensorDataForHive(Long hiveId, String email) {
+    public SensorController.HiveSensorData getRealtimeSensorDataForHive(UUID hiveId, String email) {
         Hive hive = hiveRepository.findById(hiveId)
             .orElseThrow(() -> new RuntimeException("Hive not found"));
         
@@ -124,10 +125,10 @@ public class SensorService {
      * Calls the sensor microservice to get real-time sensor data for all hives
      * Falls back to local generation if microservice is unavailable
      */
-    public Map<Long, SensorController.HiveSensorData> getRealtimeDataForAllHives(String email) {
+    public Map<UUID, SensorController.HiveSensorData> getRealtimeDataForAllHives(String email) {
         // Return sensor data for ALL hives - all users can view all hives
         List<Hive> hives = hiveRepository.findAll();
-        List<Long> hiveIds = hives.stream().map(Hive::getId).collect(Collectors.toList());
+        List<UUID> hiveIds = hives.stream().map(Hive::getId).collect(Collectors.toList());
         
         if (hiveIds.isEmpty()) {
             return new HashMap<>();
@@ -139,10 +140,10 @@ public class SensorService {
             MicroserviceRealtimeResponse response = sensorMicroserviceClient.getRealtimeSensorData(request);
             
             if (response != null && response.getSensorData() != null) {
-                Map<Long, SensorController.HiveSensorData> sensorDataMap = new HashMap<>();
+                Map<UUID, SensorController.HiveSensorData> sensorDataMap = new HashMap<>();
                 
-                for (Map.Entry<Long, MicroserviceSensorDataDTO> entry : response.getSensorData().entrySet()) {
-                    Long hiveId = entry.getKey();
+                for (Map.Entry<UUID, MicroserviceSensorDataDTO> entry : response.getSensorData().entrySet()) {
+                    UUID hiveId = entry.getKey();
                     MicroserviceSensorDataDTO microserviceData = entry.getValue();
                     
                     // Convert microservice DTO to controller DTO
@@ -184,8 +185,8 @@ public class SensorService {
     /**
      * Fallback method to generate sensor data locally if microservice is unavailable
      */
-    private Map<Long, SensorController.HiveSensorData> generateSensorDataLocally(List<Hive> hives) {
-        Map<Long, SensorController.HiveSensorData> sensorDataMap = new HashMap<>();
+    private Map<UUID, SensorController.HiveSensorData> generateSensorDataLocally(List<Hive> hives) {
+        Map<UUID, SensorController.HiveSensorData> sensorDataMap = new HashMap<>();
         
         for (Hive hive : hives) {
             // Generate random values within specified ranges
@@ -260,10 +261,10 @@ public class SensorService {
      * @param email The email of the user
      * @return Map of updated sensor data keyed by hive ID
      */
-    public Map<Long, SensorController.HiveSensorData> updateAllSensorData(String email) {
+    public Map<UUID, SensorController.HiveSensorData> updateAllSensorData(String email) {
         // This will call the microservice and save historical data
         // The getRealtimeDataForAllHives method already handles FeignException and has fallback logic
-        Map<Long, SensorController.HiveSensorData> result = getRealtimeDataForAllHives(email);
+        Map<UUID, SensorController.HiveSensorData> result = getRealtimeDataForAllHives(email);
         // Ensure we always return a non-null map
         return result != null ? result : new HashMap<>();
     }
@@ -295,7 +296,7 @@ public class SensorService {
                 lastSave.plusMinutes(intervalMinutes).isEqual(now)) {
                 
                 List<Hive> hives = hiveRepository.findByUser(user);
-                List<Long> hiveIds = hives.stream().map(Hive::getId).collect(Collectors.toList());
+                List<UUID> hiveIds = hives.stream().map(Hive::getId).collect(Collectors.toList());
                 
                 if (!hiveIds.isEmpty()) {
                     // Try to call microservice for scheduled data
@@ -304,8 +305,8 @@ public class SensorService {
                         MicroserviceRealtimeResponse response = sensorMicroserviceClient.getRealtimeSensorData(request);
                         
                         if (response != null && response.getSensorData() != null) {
-                            for (Map.Entry<Long, MicroserviceSensorDataDTO> entry : response.getSensorData().entrySet()) {
-                                Long hiveId = entry.getKey();
+                            for (Map.Entry<UUID, MicroserviceSensorDataDTO> entry : response.getSensorData().entrySet()) {
+                                UUID hiveId = entry.getKey();
                                 MicroserviceSensorDataDTO microserviceData = entry.getValue();
                                 
                                 hives.stream().filter(h -> h.getId().equals(hiveId)).findFirst().ifPresent(hive ->
@@ -373,7 +374,7 @@ public class SensorService {
         hiveSensorDataRepository.save(sensorData);
     }
     
-    public List<HiveSensorData> getHistoricalData(Long hiveId, LocalDateTime startDate, LocalDateTime endDate, String email) {
+    public List<HiveSensorData> getHistoricalData(UUID hiveId, LocalDateTime startDate, LocalDateTime endDate, String email) {
         Hive hive = hiveRepository.findById(hiveId)
             .orElseThrow(() -> new RuntimeException("Hive not found"));
         

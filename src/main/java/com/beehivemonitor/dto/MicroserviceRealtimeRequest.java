@@ -5,12 +5,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class MicroserviceRealtimeRequest {
-    private List<Long> hiveIds;
+    private List<UUID> hiveIds;
 }
 
 

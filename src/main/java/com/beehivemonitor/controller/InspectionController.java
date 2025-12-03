@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -52,7 +53,7 @@ public class InspectionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<InspectionResponse> getInspectionById(@PathVariable Long id, 
+    public ResponseEntity<InspectionResponse> getInspectionById(@PathVariable UUID id, 
                                                                @RequestHeader("Authorization") String token) {
         String email = getEmailFromToken(token);
         Inspection inspection = inspectionService.getInspectionById(id, email);
@@ -91,7 +92,7 @@ public class InspectionController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<InspectionResponse> updateInspection(@PathVariable Long id,
+    public ResponseEntity<InspectionResponse> updateInspection(@PathVariable UUID id,
                                                               @Valid @RequestBody InspectionRequest request,
                                                               @RequestHeader("Authorization") String token) {
         String email = getEmailFromToken(token);
@@ -113,7 +114,7 @@ public class InspectionController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteInspection(@PathVariable Long id,
+    public ResponseEntity<Void> deleteInspection(@PathVariable UUID id,
                                                   @RequestHeader("Authorization") String token) {
         String email = getEmailFromToken(token);
         inspectionService.deleteInspection(id, email);
@@ -123,21 +124,21 @@ public class InspectionController {
     // DTOs for request/response
     @Data
     public static class InspectionRequest {
-        private Long hiveId;
+        private UUID hiveId;
         private String inspector;
         private String date;
         private String notes;
     }
 
     public static class InspectionResponse {
-        public Long id;
-        public Long hiveId;
+        public UUID id;
+        public UUID hiveId;
         public String hiveName;
         public String inspector;
         public String date;
         public String notes;
 
-        public InspectionResponse(Long id, Long hiveId, String hiveName, String inspector, String date, String notes) {
+        public InspectionResponse(UUID id, UUID hiveId, String hiveName, String inspector, String date, String notes) {
             this.id = id;
             this.hiveId = hiveId;
             this.hiveName = hiveName;

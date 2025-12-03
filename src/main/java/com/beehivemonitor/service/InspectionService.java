@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class InspectionService {
@@ -30,7 +31,7 @@ public class InspectionService {
         return inspectionRepository.findByUserId(user.getId());
     }
 
-    public Inspection getInspectionById(Long id, String email) {
+    public Inspection getInspectionById(UUID id, String email) {
         Inspection inspection = inspectionRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Inspection not found"));
         
@@ -57,7 +58,7 @@ public class InspectionService {
     }
 
     @Transactional
-    public Inspection updateInspection(Long id, Inspection updatedInspection, String email) {
+    public Inspection updateInspection(UUID id, Inspection updatedInspection, String email) {
         Inspection inspection = getInspectionById(id, email);
         inspection.setInspector(updatedInspection.getInspector());
         inspection.setDate(updatedInspection.getDate());
@@ -66,7 +67,7 @@ public class InspectionService {
     }
 
     @Transactional
-    public void deleteInspection(Long id, String email) {
+    public void deleteInspection(UUID id, String email) {
         Inspection inspection = getInspectionById(id, email); // This also verifies ownership
         inspectionRepository.delete(inspection);
     }

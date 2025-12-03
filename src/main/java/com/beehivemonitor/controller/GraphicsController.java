@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/graphics")
@@ -28,7 +28,7 @@ public class GraphicsController {
 
     @GetMapping("/historical-data")
     public ResponseEntity<List<HiveSensorDataResponse>> getHistoricalData(
-            @RequestParam Long hiveId,
+            @RequestParam UUID hiveId,
             @RequestParam int days,
             @RequestHeader("Authorization") String token) {
         String email = getEmailFromToken(token);
@@ -56,8 +56,8 @@ public class GraphicsController {
     }
 
     public static class HiveSensorDataResponse {
-        public Long id;
-        public Long hiveId;
+        public UUID id;
+        public UUID hiveId;
         public Double temperature;
         public Double externalTemperature;
         public Double humidity;
@@ -66,7 +66,7 @@ public class GraphicsController {
         public Double weight;
         public String timestamp;
 
-        public HiveSensorDataResponse(Long id, Long hiveId, Double temperature, Double externalTemperature, Double humidity,
+        public HiveSensorDataResponse(UUID id, UUID hiveId, Double temperature, Double externalTemperature, Double humidity,
                                      Double co2, Double soundLevel, Double weight, String timestamp) {
             this.id = id;
             this.hiveId = hiveId;

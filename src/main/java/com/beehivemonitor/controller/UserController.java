@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/users")
@@ -36,7 +37,7 @@ public class UserController {
     }
 
     @GetMapping("/names")
-    public ResponseEntity<List<UserNameResponse>> getAllUserNames(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<List<UserNameResponse>> getAllUserNames() {
         return ResponseEntity.ok(userService.getAllUserNames());
     }
 
@@ -52,7 +53,7 @@ public class UserController {
     @PutMapping("/{userId}/role")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AuthResponse.UserResponse> updateUserRole(
-            @PathVariable Long userId,
+            @PathVariable UUID userId,
             @RequestHeader("Authorization") String token,
             @RequestBody UpdateRoleRequest request) {
         String email = tokenProvider.getEmailFromToken(token.substring(7));
@@ -84,11 +85,11 @@ public class UserController {
     }
 
     public static class UserNameResponse {
-        public Long id;
+        public UUID id;
         public String name;
         public String email;
 
-        public UserNameResponse(Long id, String name, String email) {
+        public UserNameResponse(UUID id, String name, String email) {
             this.id = id;
             this.name = name;
             this.email = email;

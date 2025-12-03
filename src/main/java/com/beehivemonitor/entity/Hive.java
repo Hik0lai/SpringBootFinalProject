@@ -13,6 +13,7 @@ import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "hives")
@@ -20,13 +21,13 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = {"sensors", "inspections", "alerts", "user"})
+@EqualsAndHashCode(of = "id")
 @ToString(exclude = {"sensors", "inspections", "alerts", "user"})
 public class Hive {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
     
     @NotBlank
     @Column(nullable = false)
