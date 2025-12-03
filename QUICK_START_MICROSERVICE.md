@@ -79,3 +79,4 @@ You should see JSON with sensor data!
 **Still not working?**
 - Use Method 2 (Maven Run Configuration) - it's more reliable!
 
+

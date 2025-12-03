@@ -16,3 +16,4 @@ public class HiveSensorDataDTO {
     private double weight;
 }
 
+

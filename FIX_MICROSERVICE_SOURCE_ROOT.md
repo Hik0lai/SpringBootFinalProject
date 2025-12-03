@@ -84,3 +84,4 @@ After these steps:
 
 The terminal approach works immediately and doesn't require any IntelliJ configuration!
 
+

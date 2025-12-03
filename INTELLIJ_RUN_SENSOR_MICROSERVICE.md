@@ -134,3 +134,4 @@ Once the microservice is running on port 8081:
 - [ ] Console shows "Started SensorMicroserviceApplication"
 - [ ] Console shows port 8081 (NOT 8080)
 
+

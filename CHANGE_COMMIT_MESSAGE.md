@@ -35,3 +35,4 @@ Then I can help you use `git commit --amend` or another method.
 - **Option 1**: Continue with the rebase (follow steps above)
 - **Option 2**: Cancel and use simpler method (I'll guide you)
 
+

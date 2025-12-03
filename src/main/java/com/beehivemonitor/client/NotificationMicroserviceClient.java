@@ -22,3 +22,4 @@ public interface NotificationMicroserviceClient {
     NotificationResponse sendNotification(@RequestBody NotificationRequest request);
 }
 
+

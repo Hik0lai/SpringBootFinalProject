@@ -13,3 +13,4 @@ public interface NotificationTemplateRepository extends JpaRepository<Notificati
     Optional<NotificationTemplate> findByNameAndChannelAndIsActiveTrue(String name, Notification.NotificationChannel channel);
 }
 
+

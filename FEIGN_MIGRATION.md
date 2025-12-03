@@ -89,3 +89,4 @@ Feign throws `FeignException` when microservices are unavailable. The services g
 3. **Request/Response Logging**: Configure detailed Feign logging for debugging
 4. **Retry Logic**: Add retry configuration for transient failures
 
+

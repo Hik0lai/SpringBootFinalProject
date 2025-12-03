@@ -16,3 +16,4 @@ public class MicroserviceSensorDataDTO {
     private double weight;
 }
 
+

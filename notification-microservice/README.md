@@ -136,3 +136,4 @@ The email message format is: **"Alert triggered: [Alert Name]"**
 - 🔄 Push notifications (future)
 - 🔄 Notification templates (future)
 
+

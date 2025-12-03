@@ -13,3 +13,4 @@ public class RealtimeDataResponse {
     private Map<Long, HiveSensorDataDTO> sensorData;
 }
 
+

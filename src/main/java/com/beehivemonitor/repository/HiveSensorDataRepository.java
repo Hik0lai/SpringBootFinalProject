@@ -24,3 +24,4 @@ public interface HiveSensorDataRepository extends JpaRepository<HiveSensorData, 
     );
 }
 
+

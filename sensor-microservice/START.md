@@ -47,3 +47,4 @@ You should see JSON with sensor data.
 
 Press `Ctrl + C` in the terminal where it's running.
 
+

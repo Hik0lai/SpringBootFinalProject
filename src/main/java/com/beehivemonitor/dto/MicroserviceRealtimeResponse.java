@@ -13,3 +13,4 @@ public class MicroserviceRealtimeResponse {
     private Map<Long, MicroserviceSensorDataDTO> sensorData;
 }
 
+

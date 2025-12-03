@@ -15,3 +15,4 @@ public class NotificationRequest {
     private Long alertId; // Optional: reference to alert
 }
 
+

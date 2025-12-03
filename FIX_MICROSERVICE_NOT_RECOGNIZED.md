@@ -118,3 +118,4 @@ After importing:
 - ✅ You should see `sensor-microservice` in Maven window
 - ✅ You can right-click the Java file and see "Run" option
 
+

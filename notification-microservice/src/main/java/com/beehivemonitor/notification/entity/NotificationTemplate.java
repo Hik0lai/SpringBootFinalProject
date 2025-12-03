@@ -33,3 +33,4 @@ public class NotificationTemplate {
     private Boolean isActive = true;
 }
 
+

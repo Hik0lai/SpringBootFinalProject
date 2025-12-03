@@ -37,14 +37,6 @@ public class Alert {
     
     @Column(name = "is_triggered")
     private Boolean isTriggered = false; // Whether alert is currently triggered
-    
-    // Legacy field - keeping temporarily for database migration
-    // TODO: Remove after running update-alerts-table.sql
-    @Column(nullable = true, insertable = false, updatable = false)
-    private String message;
-    
-    @Column(nullable = true, insertable = false, updatable = false)
-    private String title;
 }
 
 

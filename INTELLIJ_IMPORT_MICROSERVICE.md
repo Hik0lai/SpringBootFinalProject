@@ -102,3 +102,4 @@ After importing, you should see:
 - No more warnings about files being outside source root
 - You can right-click on `SensorMicroserviceApplication.java` and see "Run" option
 
+

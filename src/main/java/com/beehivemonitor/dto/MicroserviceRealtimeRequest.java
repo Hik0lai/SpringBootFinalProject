@@ -13,3 +13,4 @@ public class MicroserviceRealtimeRequest {
     private List<Long> hiveIds;
 }
 
+

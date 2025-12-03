@@ -19,3 +19,4 @@ SELECT User, Host FROM mysql.user WHERE User = 'sa';
 -- Show databases to confirm beehivedb exists
 SHOW DATABASES LIKE 'beehivedb';
 
+
