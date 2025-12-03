@@ -6,8 +6,11 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  // Debug: Log when Navbar renders
+  console.log("Navbar rendering, user:", user?.email || "no user");
+
   return (
-    <nav className="bg-content shadow-lg mb-6 border-b border-yellow-200">
+    <nav className="bg-content shadow-lg mb-6 border-b border-yellow-200" style={{ position: 'relative', zIndex: 1000 }}>
       <div className="container mx-auto flex items-center justify-between py-3 px-4">
         <Link to="/" className="font-bold text-lg text-yellow-600">Beehive Monitor</Link>
         <div className="flex items-center gap-4">
