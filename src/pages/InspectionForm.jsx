@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function InspectionForm() {
   const { inspectionId } = useParams();
+  const { user } = useAuth();
   const [hives, setHives] = useState([]);
-  const [users, setUsers] = useState([]);
   const [form, setForm] = useState({
     hiveId: "",
     inspector: "",
@@ -27,14 +28,6 @@ export default function InspectionForm() {
       .then((res) => setHives(res.data))
       .catch(err => console.error("Error fetching hives:", err));
 
-    // Fetch users for inspector dropdown
-    axios
-      .get("http://localhost:8080/api/users/names", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => setUsers(res.data))
-      .catch(err => console.error("Error fetching users:", err));
-
     if (isEdit) {
       setLoading(true);
       axios
@@ -51,8 +44,16 @@ export default function InspectionForm() {
         })
         .catch(err => console.error("Error fetching inspection:", err))
         .finally(() => setLoading(false));
+    } else {
+      // Set inspector to current user's name for new inspections
+      if (user) {
+        setForm(prev => ({
+          ...prev,
+          inspector: user.name || user.email,
+        }));
+      }
     }
-  }, [inspectionId, isEdit]);
+  }, [inspectionId, isEdit, user]);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -93,20 +94,6 @@ export default function InspectionForm() {
             </option>
           ))}
         </select>
-        <select
-          name="inspector"
-          className="w-full border px-3 py-2 rounded"
-          value={form.inspector}
-          onChange={handleChange}
-          required
-        >
-          <option value="">Select Inspector</option>
-          {users.map((user) => (
-            <option key={user.id} value={user.name}>
-              {user.name} ({user.email})
-            </option>
-          ))}
-        </select>
         <input
           className="w-full border px-3 py-2 rounded"
           type="date"
@@ -123,13 +110,23 @@ export default function InspectionForm() {
           onChange={handleChange}
           rows={3}
         />
-        <button
-          className="w-full bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600"
-          type="submit"
-          disabled={loading}
-        >
-          {loading ? "Saving..." : isEdit ? "Update" : "Save"}
-        </button>
+        <div className="flex gap-3">
+          <button
+            className="flex-1 bg-gray-500 text-white py-2 rounded hover:bg-gray-600"
+            type="button"
+            onClick={() => navigate("/inspections")}
+            disabled={loading}
+          >
+            Cancel
+          </button>
+          <button
+            className="flex-1 bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600"
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? "Saving..." : isEdit ? "Update" : "Save"}
+          </button>
+        </div>
       </form>
     </div>
   );
