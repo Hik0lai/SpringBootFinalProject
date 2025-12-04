@@ -12,6 +12,8 @@ import com.beehivemonitor.repository.UserRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,8 @@ import java.util.UUID;
 
 @Service
 public class AlertService {
+
+    private static final Logger logger = LoggerFactory.getLogger(AlertService.class);
 
     @Autowired
     private AlertRepository alertRepository;
@@ -140,7 +144,8 @@ public class AlertService {
         return alertRepository.save(alert);
     }
 
-    private boolean checkAlertTriggered(Alert alert, SensorController.HiveSensorData sensorData) {
+    // Package-private to allow access from AlertMonitoringScheduler
+    boolean checkAlertTriggered(Alert alert, SensorController.HiveSensorData sensorData) {
         if (sensorData == null || alert.getTriggerConditions() == null || alert.getTriggerConditions().isEmpty()) {
             return false;
         }
@@ -195,8 +200,9 @@ public class AlertService {
 
     /**
      * Sends email notification via notification microservice
+     * Package-private to allow access from AlertMonitoringScheduler
      */
-    private void sendEmailNotification(User user, Alert alert) {
+    void sendEmailNotification(User user, Alert alert) {
         try {
             NotificationRequest request = new NotificationRequest(
                 user.getEmail(),
@@ -207,9 +213,11 @@ public class AlertService {
             );
             
             notificationMicroserviceClient.sendNotification(request);
+            logger.debug("Email notification sent for alert {} to user {}", alert.getId(), user.getEmail());
         } catch (FeignException e) {
             // Log error but don't fail the alert check
-            System.err.println("Failed to send email notification: " + e.getMessage());
+            logger.error("Failed to send email notification for alert {} to user {}: {}", 
+                alert.getId(), user.getEmail(), e.getMessage());
         }
     }
 }
