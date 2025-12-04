@@ -124,3 +124,5 @@ The app uses JWT token-based authentication. Tokens are stored in localStorage a
 
 This project is part of a Spring Boot final project.
 
+## The project is hosted here http://www.beeshive.site/
+

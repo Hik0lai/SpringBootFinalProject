@@ -32,6 +32,10 @@ dist-ssr
 target/
 !.mvn/wrapper/maven-wrapper.jar
 
+# JaCoCo Code Coverage Reports
+htmlReport/
+*.exec
+
 # Compiled class files
 *.class
 
