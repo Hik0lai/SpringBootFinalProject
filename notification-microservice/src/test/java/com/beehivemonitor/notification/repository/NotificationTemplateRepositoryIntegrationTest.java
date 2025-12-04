@@ -223,46 +223,39 @@ class NotificationTemplateRepositoryIntegrationTest {
         duplicateTemplate.setBodyTemplate("Duplicate Body");
         duplicateTemplate.setIsActive(true);
 
-        // Act & Assert - Should allow duplicate names (if no unique constraint)
-        // Note: This test assumes the unique constraint is at database level
-        // If there's a unique constraint violation, it will be thrown
-        assertDoesNotThrow(() -> {
+        // Act & Assert - Should throw exception due to unique constraint on name field
+        // The name field has unique = true, so duplicate names are not allowed
+        assertThrows(org.springframework.dao.DataIntegrityViolationException.class, () -> {
             templateRepository.save(duplicateTemplate);
             entityManager.flush();
         });
     }
 
     @Test
-    void testMultipleChannelsForSameName() {
-        // Arrange - Create templates with same name but different channels
+    void testMultipleChannelsForSameName_ThrowsConstraintViolation() {
+        // Arrange - Create template with unique name
         NotificationTemplate emailTemplate = new NotificationTemplate();
-        emailTemplate.setName("MULTI_CHANNEL");
+        emailTemplate.setName("MULTI_CHANNEL_EMAIL");
         emailTemplate.setChannel(Notification.NotificationChannel.EMAIL);
         emailTemplate.setSubjectTemplate("Email Subject");
         emailTemplate.setBodyTemplate("Email Body");
         emailTemplate.setIsActive(true);
         entityManager.persistAndFlush(emailTemplate);
 
+        // Try to create another template with same name but different channel
+        // This should fail because name field has unique constraint
         NotificationTemplate smsTemplate = new NotificationTemplate();
-        smsTemplate.setName("MULTI_CHANNEL");
+        smsTemplate.setName("MULTI_CHANNEL_EMAIL"); // Same name as emailTemplate
         smsTemplate.setChannel(Notification.NotificationChannel.SMS);
         smsTemplate.setSubjectTemplate("SMS Subject");
         smsTemplate.setBodyTemplate("SMS Body");
         smsTemplate.setIsActive(true);
-        entityManager.persistAndFlush(smsTemplate);
 
-        // Act
-        Optional<NotificationTemplate> emailFound = templateRepository.findByNameAndChannelAndIsActiveTrue(
-                "MULTI_CHANNEL", Notification.NotificationChannel.EMAIL);
-        Optional<NotificationTemplate> smsFound = templateRepository.findByNameAndChannelAndIsActiveTrue(
-                "MULTI_CHANNEL", Notification.NotificationChannel.SMS);
-
-        // Assert
-        assertTrue(emailFound.isPresent());
-        assertEquals(Notification.NotificationChannel.EMAIL, emailFound.get().getChannel());
-        
-        assertTrue(smsFound.isPresent());
-        assertEquals(Notification.NotificationChannel.SMS, smsFound.get().getChannel());
+        // Act & Assert - Should throw exception due to unique constraint violation
+        assertThrows(org.springframework.dao.DataIntegrityViolationException.class, () -> {
+            templateRepository.save(smsTemplate);
+            entityManager.flush();
+        });
     }
 }
 

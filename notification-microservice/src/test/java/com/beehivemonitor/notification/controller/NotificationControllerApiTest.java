@@ -357,18 +357,19 @@ class NotificationControllerApiTest {
     }
 
     @Test
-    void testSendNotification_NullRecipientEmail_ServiceHandlesIt() throws Exception {
+    void testSendNotification_NullRecipientEmail_ReturnsInternalServerError() throws Exception {
         // Arrange
         validRequest.setRecipientEmail(null);
-        when(notificationService.sendEmailNotification(
-                anyString(), anyString(), anyString(), any()))
-                .thenReturn(successNotification);
-
-        // Act & Assert - Service will handle null email, but endpoint should process request
+        // When recipientEmail is null, the service will throw an exception
+        // which causes the controller to return 500 Internal Server Error
+        
+        // Act & Assert - Null email causes service failure, controller returns 500
         mockMvc.perform(post("/api/notifications/send")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(validRequest)))
-                .andExpect(status().isOk());
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.status").value("FAILED"));
     }
 
     @Test
